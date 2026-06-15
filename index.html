@@ -470,7 +470,10 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
     </div>
   </div>
 
-  <div class="section-eyebrow">Performance scores · last 7 days</div>
+  <div class="btwn" style="align-items:flex-end;margin-bottom:2px">
+    <div class="section-eyebrow" style="margin-bottom:0">Performance scores</div>
+    <div class="fchips" id="dash-score-range" style="margin-bottom:0"></div>
+  </div>
   <div class="score-grid" id="dash-scores"></div>
 
   <div class="section-eyebrow">Quick stats</div>
@@ -479,14 +482,26 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
   <div class="section-eyebrow">Insights</div>
   <div id="dash-insights"></div>
 
-  <div class="chart-grid mt2">
+  <div class="btwn" style="align-items:flex-end;margin-top:1.6rem;margin-bottom:2px">
+    <div class="section-eyebrow" style="margin-bottom:0">Trends</div>
+    <div class="fchips" id="dash-chart-range" style="margin-bottom:0"></div>
+  </div>
+  <div class="chart-grid">
     <div class="chart-card">
-      <div class="card-title">Sleep <span class="card-sub">last 14 days</span></div>
+      <div class="card-title">Sleep <span class="card-sub" id="dash-sleep-sub">last 14 days</span></div>
       <div class="chart-box sm"><canvas id="chart-dash-sleep"></canvas></div>
     </div>
     <div class="chart-card">
-      <div class="card-title">Deep work <span class="card-sub">last 14 days</span></div>
+      <div class="card-title">Deep work <span class="card-sub" id="dash-dw-sub">last 14 days</span></div>
       <div class="chart-box sm"><canvas id="chart-dash-dw"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="card-title">Running <span class="card-sub" id="dash-run-sub">last 14 days</span></div>
+      <div class="chart-box sm"><canvas id="chart-dash-run"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="card-title">Weight <span class="card-sub" id="dash-wt-sub">last 14 days</span></div>
+      <div class="chart-box sm"><canvas id="chart-dash-wt"></canvas></div>
     </div>
   </div>
 
@@ -504,6 +519,14 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
       <button class="btn grn sm" onclick="nav('train');setTimeout(startWorkout,80)"><i class="ti ti-plus"></i>Log workout</button>
     </div>
     <div id="dash-workout"></div>
+  </div>
+
+  <div class="card mt">
+    <div class="btwn" style="margin-bottom:12px">
+      <span class="fw6 f14">Last run</span>
+      <button class="btn sm" onclick="nav('running')">Running <i class="ti ti-arrow-right" style="font-size:12px"></i></button>
+    </div>
+    <div id="dash-run"></div>
   </div>
 </div>
 
@@ -907,6 +930,27 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
 </div>
 </div>
 
+<!-- Copy block to days -->
+<div class="overlay hidden" id="modal-copyblock">
+<div class="modal" style="max-width:420px">
+  <div class="mhead"><span>Copy block to days</span><button class="btn ico" onclick="closeModal('modal-copyblock')"><i class="ti ti-x"></i></button></div>
+  <div class="f13 muted" id="cb-blockinfo" style="margin-bottom:14px"></div>
+  <div class="fg">
+    <label>Copy to which days?</label>
+    <div class="typesel" id="cb-days"></div>
+  </div>
+  <div class="row" style="margin-top:4px;margin-bottom:14px">
+    <button class="btn sm" onclick="cbPickWeekdays()">Weekdays</button>
+    <button class="btn sm" onclick="cbPickAll()">All days</button>
+    <button class="btn sm" onclick="cbPickNone()">Clear</button>
+  </div>
+  <div class="row" style="justify-content:flex-end;margin-top:6px">
+    <button class="btn" onclick="closeModal('modal-copyblock')">Cancel</button>
+    <button class="btn pri" onclick="confirmCopyBlock()">Copy block</button>
+  </div>
+</div>
+</div>
+
 <!-- Exercise picker -->
 <div class="overlay hidden" id="modal-ex">
 <div class="modal">
@@ -1286,6 +1330,10 @@ let S={
   finFilterType:'all',finFilterCat:'all',finFilterMonth:'all',
   range:90,
   runChartN:30,
+  dashScoreRange:7,
+  dashChartRange:14,
+  copyBlockId:null,
+  copyDays:[],
 };
 
 /* ─────────────────────────────────────────
@@ -1422,21 +1470,22 @@ function weightTrend(){const wts=getTracking(14).filter(r=>r.weight).map(r=>pars
 /* ─────────────────────────────────────────
    SCORES
 ───────────────────────────────────────── */
-function calcScores(){
-  const r7=getTracking(7);
+function calcScores(n=7){
+  const r7=getTracking(n);
   if(!r7.length)return{Sleep:0,Productivity:0,Training:0,Running:0,Wellness:0};
   const sl=avg(r7.filter(r=>r.sleep).map(r=>parseFloat(r.sleep)||0));
   const sq=avg(r7.filter(r=>r.sleepq).map(r=>parseFloat(r.sleepq)||0));
   const dw=avg(r7.filter(r=>r.deepwork).map(r=>parseFloat(r.deepwork)||0));
   const pr=avg(r7.filter(r=>r.prodrating).map(r=>parseFloat(r.prodrating)||0));
-  const now=new Date();const sw=new Date(now);sw.setDate(now.getDate()-7);
+  const now=new Date();const sw=new Date(now);sw.setDate(now.getDate()-n);
   const woDates=new Set(S.workouts.filter(w=>new Date(w.date+'T12:00:00')>=sw).map(w=>w.date));
   const wo=woDates.size;
   const runs7=S.runs.filter(r=>new Date(r.date+'T12:00:00')>=sw).length;
+  const weeks=n/7;
   const sleepScore=Math.min(100,Math.round((sl/8)*60+(sq/10)*40));
   const prodScore=Math.min(100,Math.round((dw/3)*60+(pr/10)*40));
-  const trainScore=Math.min(100,Math.round((wo/4)*100));
-  const runScore=Math.min(100,runs7*25);
+  const trainScore=Math.min(100,Math.round((wo/(4*weeks))*100));
+  const runScore=Math.min(100,Math.round((runs7/(4*weeks))*100));
   const wellness=Math.round((sleepScore+prodScore+trainScore+runScore)/4);
   return{Sleep:sleepScore,Productivity:prodScore,Training:trainScore,Running:runScore,Wellness:wellness};
 }
@@ -1456,7 +1505,7 @@ function scoreSVG(v,color){
 function generateInsights(){
   const ins=[];
   const r30=getTracking(30);
-  if(!r30.length){if(S.finance&&S.finance.length>=3){const cm=curMonth();const ce=sumAmt(txExpenses(txInMonth(cm)));ins.push({icon:'\uD83D\uDCB0',text:'<strong>'+monthName(cm)+':</strong> '+fmtKr0(ce)+' spent so far this month.',type:''});}ins.push({icon:'\uD83D\uDCCA',text:'<strong>Start logging.</strong> Fill in today\'s Stats &amp; Tracking entry to unlock personalised insights.',type:''});return ins;}
+  if(!r30.length){if(S.finance&&S.finance.length>=3){const cm=curMonth();const ce=sumAmt(txExpenses(txInMonth(cm)));ins.push({icon:'\uD83D\uDCB0',text:'<strong>'+monthName(cm)+':</strong> '+fmtKr0(ce)+' spent so far this month.',type:''});}if(!ins.length)ins.push({icon:'\uD83D\uDC4B',text:'<strong>Welcome back.</strong> Your insights appear here as your logs build up.',type:''});return ins;}
   const sleepVals=r30.filter(r=>r.sleep).map(r=>parseFloat(r.sleep));
   if(sleepVals.length>=7){const a=avg(sleepVals);if(a<7)ins.push({icon:'\uD83D\uDE34',text:'<strong>Sleep below target.</strong> 30-day average is '+rd(a)+'h. Aim for 8h consistently — it\'s the biggest recovery driver you have.',type:'amb'});else ins.push({icon:'\u2705',text:'<strong>Sleep on track.</strong> 30-day average is '+rd(a)+'h. Strong foundation.',type:'grn'});}
   const dwV=r30.filter(r=>r.deepwork).map(r=>parseFloat(r.deepwork));
@@ -1484,32 +1533,65 @@ function renderDash(){
   const h=new Date().getHours();
   document.getElementById('greeting').textContent=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
   document.getElementById('datestr').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const scores=calcScores();
-  document.getElementById('dash-scores').innerHTML=Object.entries(scores).map(([k,v])=>'<div class="score-card">'+scoreSVG(v,scoreColor(v))+'<div style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;color:var(--text3);text-align:center">'+k+'</div></div>').join('');
-  const r7=getTracking(7);const last=r7[r7.length-1]||{};
-  const now=new Date();const sw=new Date(now);sw.setDate(now.getDate()-7);
-  const wkKm=rd(S.runs.filter(r=>new Date(r.date)>=sw).reduce((s,r)=>s+(parseFloat(r.distance)||0),0),1);
+  renderDashScoreRange();
+  renderDashScores();
+  const n=S.dashScoreRange;
+  const r7=getTracking(n);const last=getTracking(1)[0]||{};
+  const now=new Date();const sw=new Date(now);sw.setDate(now.getDate()-n);
+  const wkKm=rd(S.runs.filter(r=>new Date(r.date+'T12:00:00')>=sw).reduce((s,r)=>s+(parseFloat(r.distance)||0),0),1);
+  const lbl=n+'d';
   document.getElementById('dash-stats').innerHTML=[
-    {l:'Sleep avg (7d)',v:r7.filter(r=>r.sleep).length?rd(avg(r7.filter(r=>r.sleep).map(r=>parseFloat(r.sleep))))+'h':'\u2014',s:'target: 8h'},
+    {l:'Sleep avg ('+lbl+')',v:r7.filter(r=>r.sleep).length?rd(avg(r7.filter(r=>r.sleep).map(r=>parseFloat(r.sleep))))+'h':'\u2014',s:'target: 8h'},
+    {l:'Deep work avg ('+lbl+')',v:r7.filter(r=>r.deepwork).length?rd(avg(r7.filter(r=>r.deepwork).map(r=>parseFloat(r.deepwork))))+'h':'\u2014',s:'target: 2h+'},
+    {l:'Running ('+lbl+')',v:wkKm+'km',s:S.runs.length+' total runs'},
     {l:'Log streak',v:calcLogStreak()+'d',s:'keep it going'},
-    {l:'Deep work avg',v:r7.filter(r=>r.deepwork).length?rd(avg(r7.filter(r=>r.deepwork).map(r=>parseFloat(r.deepwork))))+'h':'\u2014',s:'target: 2h+'},
-    {l:'Running this week',v:wkKm+'km',s:S.runs.length+' total runs'},
+    {l:'Run streak',v:calcRunStreak()+'d',s:'consecutive days'},
     {l:'Weight (latest)',v:last.weight?last.weight+'kg':'\u2014',s:weightTrend()},
-    {l:'Med streak',v:calcHabitStreak('meds')+'d',s:'medication'},
   ].map(x=>'<div class="stat"><div class="stat-lbl">'+x.l+'</div><div class="stat-val">'+x.v+'</div><div class="stat-sub">'+x.s+'</div></div>').join('');
   const ins=generateInsights();
   document.getElementById('dash-insights').innerHTML=ins.slice(0,3).map(i=>'<div class="insight-card '+(i.type||'')+'"><div class="insight-icon">'+i.icon+'</div><div class="insight-text">'+i.text+'</div></div>').join('');
-  setTimeout(()=>{
-    const sl=getField('sleep',14);
-    mkChart('chart-dash-sleep',{type:'line',data:{labels:sl.map(x=>x.date.slice(5)),datasets:[{...LD,data:sl.map(x=>x.v),borderColor:C.accent,backgroundColor:'rgba(127,119,221,0.12)',fill:true}]},options:{scales:{y:{min:0,max:12}}}});
-    const dw=getField('deepwork',14);
-    mkChart('chart-dash-dw',{type:'bar',data:{labels:dw.map(x=>x.date.slice(5)),datasets:[{...BD,data:dw.map(x=>x.v),backgroundColor:'rgba(29,158,117,0.7)'}]},options:{scales:{y:{min:0}}}});
-  },40);
+  renderDashChartRange();
+  renderDashCharts();
   const nw=new Date(),nm=nw.getHours()*60+nw.getMinutes();
   const upcoming=(S.routine[S.rday]||[]).slice().sort((a,b)=>(a.time||'').localeCompare(b.time||'')).filter(b=>{const t=(b.time||'00:00').split(':').map(Number);return t[0]*60+t[1]>=nm;}).slice(0,4);
   document.getElementById('dash-sched').innerHTML=upcoming.length?upcoming.map(b=>'<div class="rblock t-'+b.type+'" style="margin-bottom:4px"><div class="rbar"></div><div class="rtime">'+b.time+'</div><div class="rinfo"><div class="rtitle">'+b.title+'</div></div></div>').join(''):'<div class="empty" style="padding:1rem"><p>No more blocks today. Great work.</p></div>';
   const lw=S.workouts[S.workouts.length-1];
   document.getElementById('dash-workout').innerHTML=lw?'<div class="btwn"><div><div class="fw5">'+(lw.name||'Workout')+'</div><div class="f12 muted" style="margin-top:2px">'+fmtDate(lw.date)+' \u00B7 '+lw.exercises.length+' exercises</div></div><button class="btn sm" onclick="viewWDetail(\''+lw.id+'\')">Details</button></div>':'<div class="muted f13">No workouts yet. Hit \u201CLog workout\u201D to start.</div>';
+  const lr=[...S.runs].sort((a,b)=>a.date.localeCompare(b.date))[S.runs.length-1];
+  document.getElementById('dash-run').innerHTML=lr?'<div class="btwn"><div><div class="fw5">'+(parseFloat(lr.distance)||0)+' km \u00B7 '+(lr.type||'Run')+'</div><div class="f12 muted" style="margin-top:2px">'+fmtDate(lr.date)+[lr.duration?' \u00B7 '+lr.duration:'',lr.pace?' \u00B7 '+lr.pace+'/km':'',lr.hr?' \u00B7 '+lr.hr+'bpm':''].join('')+'</div></div><button class="btn sm" onclick="viewRunDetail(\''+lr.id+'\')">Details</button></div>':'<div class="muted f13">No runs logged yet.</div>';
+}
+function renderDashScoreRange(){
+  document.getElementById('dash-score-range').innerHTML=[7,14,30].map(n=>'<button class="chip'+(S.dashScoreRange===n?' on':'')+'" onclick="setDashScoreRange('+n+')">'+n+'d</button>').join('');
+}
+function setDashScoreRange(n){S.dashScoreRange=n;renderDash();}
+function renderDashScores(){
+  const scores=calcScores(S.dashScoreRange);
+  document.getElementById('dash-scores').innerHTML=Object.entries(scores).map(([k,v])=>'<div class="score-card">'+scoreSVG(v,scoreColor(v))+'<div style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;color:var(--text3);text-align:center">'+k+'</div></div>').join('');
+}
+function renderDashChartRange(){
+  document.getElementById('dash-chart-range').innerHTML=[7,14,30].map(n=>'<button class="chip'+(S.dashChartRange===n?' on':'')+'" onclick="setDashChartRange('+n+')">'+n+'d</button>').join('');
+}
+function setDashChartRange(n){S.dashChartRange=n;renderDashChartRange();renderDashCharts();}
+function runKmByDay(n){
+  const now=new Date();const sw=new Date(now);sw.setDate(now.getDate()-n);sw.setHours(0,0,0,0);
+  const byDay={};
+  S.runs.forEach(r=>{const d=new Date(r.date+'T12:00:00');if(d>=sw)byDay[r.date]=(byDay[r.date]||0)+(parseFloat(r.distance)||0);});
+  return Object.keys(byDay).sort().map(date=>({date,v:rd(byDay[date],1)}));
+}
+function renderDashCharts(){
+  const n=S.dashChartRange;
+  const sub='last '+n+' days';
+  ['dash-sleep-sub','dash-dw-sub','dash-run-sub','dash-wt-sub'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=sub;});
+  setTimeout(()=>{
+    const sl=getField('sleep',n);
+    mkChart('chart-dash-sleep',{type:'line',data:{labels:sl.map(x=>x.date.slice(5)),datasets:[{...LD,data:sl.map(x=>x.v),borderColor:C.accent,backgroundColor:'rgba(127,119,221,0.12)',fill:true}]},options:{scales:{y:{min:0,max:12}}}});
+    const dw=getField('deepwork',n);
+    mkChart('chart-dash-dw',{type:'bar',data:{labels:dw.map(x=>x.date.slice(5)),datasets:[{...BD,data:dw.map(x=>x.v),backgroundColor:'rgba(29,158,117,0.7)'}]},options:{scales:{y:{min:0}}}});
+    const rk=runKmByDay(n);
+    mkChart('chart-dash-run',{type:'bar',data:{labels:rk.map(x=>x.date.slice(5)),datasets:[{...BD,data:rk.map(x=>x.v),backgroundColor:'rgba(184,115,18,0.75)'}]},options:{scales:{y:{min:0,title:{display:true,text:'km'}}}}});
+    const wt=getField('weight',n);
+    mkChart('chart-dash-wt',{type:'line',data:{labels:wt.map(x=>x.date.slice(5)),datasets:[{...LD,data:wt.map(x=>x.v),borderColor:C.pink,backgroundColor:'rgba(212,83,126,0.10)',fill:true}]},options:{scales:{y:{beginAtZero:false}}}});
+  },40);
 }
 
 /* ─────────────────────────────────────────
@@ -2131,7 +2213,7 @@ function renderRoutine(){
   el.innerHTML='<div class="rlist" id="rlist">'+blocks.map(b=>{
     const isDone=done.includes(b.id);
     const check=isToday?'<button class="rcheck'+(isDone?' on':'')+'" onclick="toggleRDone(event,'+b.id+')" title="Mark done" aria-label="Mark done"><i class="ti ti-'+(isDone?'check':'circle')+'"></i></button>':'<div class="rbar"></div>';
-    return '<div class="rblock t-'+b.type+(isDone?' rdone':'')+'" draggable="true" data-id="'+b.id+'"><i class="ti ti-grip-vertical dhandle"></i>'+check+'<div class="rtime">'+(b.time||'')+'</div><div class="rinfo"><div class="rtitle">'+b.title+'</div>'+(b.desc?'<div class="rdesc">'+b.desc+'</div>':'')+'</div><div class="ract"><button class="btn ico" onclick="openBlockModal('+b.id+')"><i class="ti ti-pencil"></i></button><button class="btn ico" onclick="delBlock('+b.id+')"><i class="ti ti-trash"></i></button></div></div>';
+    return '<div class="rblock t-'+b.type+(isDone?' rdone':'')+'" draggable="true" data-id="'+b.id+'"><i class="ti ti-grip-vertical dhandle"></i>'+check+'<div class="rtime">'+(b.time||'')+'</div><div class="rinfo"><div class="rtitle">'+b.title+'</div>'+(b.desc?'<div class="rdesc">'+b.desc+'</div>':'')+'</div><div class="ract"><button class="btn ico" onclick="openCopyBlock('+b.id+')" title="Copy to other days"><i class="ti ti-copy"></i></button><button class="btn ico" onclick="openBlockModal('+b.id+')" title="Edit"><i class="ti ti-pencil"></i></button><button class="btn ico" onclick="delBlock('+b.id+')" title="Delete"><i class="ti ti-trash"></i></button></div></div>';
   }).join('')+'</div>';
   el.querySelectorAll('.rblock').forEach(r=>{
     r.addEventListener('dragstart',e=>{dragSrc=r;r.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
@@ -2168,6 +2250,37 @@ function openBlockModal(id){
 }
 function delBlock(id){if(!confirm('Delete this block?'))return;S.routine[S.rday]=(S.routine[S.rday]||[]).filter(b=>b.id!=id);save(K.routine,S.routine);renderRoutine();}
 function saveBlock(){const t=document.getElementById('mb-ttl').value.trim();if(!t){alert('Please add a title.');return;}const to=document.querySelector('.topt.on');const entry={time:document.getElementById('mb-time').value,duration:document.getElementById('mb-dur').value,title:t,desc:document.getElementById('mb-desc').value.trim(),type:to?to.dataset.t:'free'};if(!S.routine[S.rday])S.routine[S.rday]=[];if(S.editBlock){const i=S.routine[S.rday].findIndex(b=>b.id===S.editBlock.id);if(i!==-1)S.routine[S.rday][i]={...S.editBlock,...entry};}else S.routine[S.rday].push({id:Date.now(),...entry});save(K.routine,S.routine);closeModal('modal-block');renderRoutine();}
+function openCopyBlock(id){
+  const b=(S.routine[S.rday]||[]).find(x=>x.id===id);if(!b)return;
+  S.copyBlockId=id;S.copyDays=[];
+  document.getElementById('cb-blockinfo').innerHTML='<strong>'+(b.time?b.time+' \u00B7 ':'')+b.title+'</strong><br>Currently on '+DSHORT[DAYS.indexOf(S.rday)]+'. Pick the days to add a copy to.';
+  renderCopyDays();
+  document.getElementById('modal-copyblock').classList.remove('hidden');
+}
+function renderCopyDays(){
+  document.getElementById('cb-days').innerHTML=DAYS.map((d,i)=>{
+    const isSrc=d===S.rday;
+    return '<span class="topt'+(S.copyDays.includes(d)?' on':'')+'" onclick="toggleCopyDay(\''+d+'\')">'+DSHORT[i]+(isSrc?' (this day)':'')+'</span>';
+  }).join('');
+}
+function toggleCopyDay(d){const i=S.copyDays.indexOf(d);if(i===-1)S.copyDays.push(d);else S.copyDays.splice(i,1);renderCopyDays();}
+function cbPickWeekdays(){S.copyDays=['mon','tue','wed','thu','fri'].filter(d=>d!==S.rday);renderCopyDays();}
+function cbPickAll(){S.copyDays=DAYS.filter(d=>d!==S.rday);renderCopyDays();}
+function cbPickNone(){S.copyDays=[];renderCopyDays();}
+function confirmCopyBlock(){
+  const b=(S.routine[S.rday]||[]).find(x=>x.id===S.copyBlockId);if(!b){closeModal('modal-copyblock');return;}
+  if(!S.copyDays.length){alert('Pick at least one day to copy to.');return;}
+  let base=Date.now(),n=0;
+  S.copyDays.forEach(d=>{
+    if(!S.routine[d])S.routine[d]=[];
+    const{id,...rest}=b;
+    S.routine[d].push({id:base++,...rest});n++;
+  });
+  save(K.routine,S.routine);
+  closeModal('modal-copyblock');
+  renderRoutine();
+  toast('Copied to '+n+' day'+(n>1?'s':''));
+}
 document.querySelectorAll('.topt').forEach(o=>o.addEventListener('click',()=>{document.querySelectorAll('.topt').forEach(x=>x.classList.remove('on'));o.classList.add('on');}));
 document.querySelectorAll('.run-type-opt').forEach(o=>o.addEventListener('click',()=>{document.querySelectorAll('.run-type-opt').forEach(x=>x.classList.remove('on'));o.classList.add('on');}));
 
@@ -2374,6 +2487,15 @@ function renderSyncUI(){
 
 /* ============ MODALS ============ */
 function closeModal(id){const el=document.getElementById(id);if(el)el.classList.add('hidden');}
+let _toastT=null;
+function toast(msg){
+  let t=document.getElementById('app-toast');
+  if(!t){t=document.createElement('div');t.id='app-toast';t.style.cssText='position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(8px);background:var(--text);color:var(--surface);padding:10px 18px;border-radius:99px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);z-index:1200;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;max-width:90vw;text-align:center';document.body.appendChild(t);}
+  t.textContent=msg;
+  requestAnimationFrame(()=>{t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';});
+  clearTimeout(_toastT);
+  _toastT=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(8px)';},2200);
+}
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.add('hidden');}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.overlay:not(.hidden)').forEach(o=>o.classList.add('hidden'));});
 
