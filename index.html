@@ -1539,13 +1539,13 @@ function renderDash(){
   const r7=getTracking(n);const last=getTracking(1)[0]||{};
   const now=new Date();const sw=new Date(now);sw.setDate(now.getDate()-n);
   const wkKm=rd(S.runs.filter(r=>new Date(r.date+'T12:00:00')>=sw).reduce((s,r)=>s+(parseFloat(r.distance)||0),0),1);
+  const woCount=new Set(S.workouts.filter(w=>new Date(w.date+'T12:00:00')>=sw).map(w=>w.date)).size;
   const lbl=n+'d';
   document.getElementById('dash-stats').innerHTML=[
     {l:'Sleep avg ('+lbl+')',v:r7.filter(r=>r.sleep).length?rd(avg(r7.filter(r=>r.sleep).map(r=>parseFloat(r.sleep))))+'h':'\u2014',s:'target: 8h'},
     {l:'Deep work avg ('+lbl+')',v:r7.filter(r=>r.deepwork).length?rd(avg(r7.filter(r=>r.deepwork).map(r=>parseFloat(r.deepwork))))+'h':'\u2014',s:'target: 2h+'},
     {l:'Running ('+lbl+')',v:wkKm+'km',s:S.runs.length+' total runs'},
-    {l:'Log streak',v:calcLogStreak()+'d',s:'keep it going'},
-    {l:'Run streak',v:calcRunStreak()+'d',s:'consecutive days'},
+    {l:'Workouts ('+lbl+')',v:woCount,s:S.workouts.length+' total'},
     {l:'Weight (latest)',v:last.weight?last.weight+'kg':'\u2014',s:weightTrend()},
   ].map(x=>'<div class="stat"><div class="stat-lbl">'+x.l+'</div><div class="stat-val">'+x.v+'</div><div class="stat-sub">'+x.s+'</div></div>').join('');
   const ins=generateInsights();
