@@ -17,7 +17,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{height:100%;-webkit-text-size-adjust:100%}
+html{height:100%;-webkit-text-size-adjust:100%;background:var(--bg)}
 body{height:100%;font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.5;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;letter-spacing:-.006em}
 button{font-family:inherit;cursor:pointer;letter-spacing:inherit}
 input,textarea,select{font-family:inherit;font-size:inherit}
@@ -417,14 +417,77 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
 .pill.amb{background:var(--amber-bg);color:var(--amber-text)}
 .pill.acc{background:var(--accent-bg);color:var(--accent-text)}
 
+/* ── AI Coach ── */
+.coach-wrap{display:flex;flex-direction:column;height:calc(100vh - 6rem);max-height:760px}
+.coach-msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:4px 2px 10px}
+.cmsg{max-width:86%;padding:11px 14px;border-radius:var(--r);font-size:13.5px;line-height:1.6;white-space:pre-wrap;word-wrap:break-word;box-shadow:var(--shadow-sm);animation:pageIn .3s ease}
+.cmsg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:5px}
+.cmsg.coach{align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:5px}
+.cmsg.coach strong{color:var(--text);font-weight:700}
+.cmsg.err{align-self:flex-start;background:var(--pink-bg);color:var(--pink-text);border:1px solid transparent;border-bottom-left-radius:5px}
+.cmsg.typing{align-self:flex-start;color:var(--text3);font-style:italic}
+.coach-input-row{display:flex;gap:9px;align-items:flex-end;padding-top:12px;border-top:1px solid var(--border);margin-top:4px}
+.coach-input-row .fta{min-height:46px;max-height:140px;flex:1;resize:none}
+.coach-send{flex-shrink:0;height:46px;width:46px;border-radius:var(--r2);display:flex;align-items:center;justify-content:center;font-size:19px;padding:0}
+.coach-suggest{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.coach-chip{padding:7px 13px;border-radius:99px;font-size:12px;font-weight:500;border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .15s}
+.coach-chip:hover{border-color:var(--accent);color:var(--accent-text);transform:translateY(-1px)}
+.coach-setup{max-width:540px}
+.key-mask{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--bg2);padding:9px 12px;border-radius:var(--r3);color:var(--text2);word-break:break-all}
+.guide-step{display:flex;gap:12px;margin-bottom:13px}
+.guide-num{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--accent-bg);color:var(--accent-text);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.guide-step div:last-child{font-size:13px;line-height:1.55;color:var(--text2)}
+.guide-step a{color:var(--accent-text);font-weight:600}
+
+/* ── Coach FAB ── */
+.fab{position:fixed;right:24px;bottom:24px;width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;border:none;display:flex;align-items:center;justify-content:center;font-size:25px;box-shadow:var(--shadow-lg);z-index:180;cursor:pointer;transition:transform .15s,background .15s}
+.fab:hover{transform:scale(1.06)}
+.fab:active{transform:scale(.96)}
+.fab.hidden{display:none}
+@media(max-width:768px){.fab{bottom:calc(72px + env(safe-area-inset-bottom));right:16px;width:50px;height:50px;font-size:22px}}
+
+/* ── Goals ── */
+.goal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.3rem;box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .15s;margin-bottom:14px}
+.goal-card:hover{box-shadow:var(--shadow)}
+.goal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.goal-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;letter-spacing:-.01em;line-height:1.25}
+.goal-meta{font-size:11.5px;color:var(--text3);margin-top:4px;display:flex;gap:12px;flex-wrap:wrap}
+.goal-info{font-size:13px;color:var(--text2);line-height:1.6;margin:10px 0;white-space:pre-wrap}
+.goal-routine{font-size:12.5px;color:var(--text2);line-height:1.55;background:var(--surface2);border-radius:var(--r3);padding:10px 12px;margin-top:10px;white-space:pre-wrap}
+.goal-routine-lbl{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:5px}
+.goal-prog-wrap{margin-top:12px}
+.goal-prog-bar-wrap{height:9px;background:var(--bg2);border-radius:99px;overflow:hidden;margin-top:6px}
+.goal-prog-bar{height:100%;border-radius:99px;transition:width .7s cubic-bezier(.22,.61,.36,1);background:var(--accent)}
+.goal-acts{display:flex;gap:5px;flex-shrink:0}
+.status-pill{font-size:11px;font-weight:600;padding:3px 11px;border-radius:99px;white-space:nowrap}
+.st-notstarted{background:var(--bg2);color:var(--text2)}
+.st-inprogress{background:var(--accent-bg);color:var(--accent-text)}
+.st-ontrack{background:var(--green-bg);color:var(--green-text)}
+.st-atrisk{background:var(--amber-bg);color:var(--amber-text)}
+.st-done{background:var(--green);color:#fff}
+
+/* ── Category / type manager ── */
+.man-row{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--border)}
+.man-row:last-child{border-bottom:none}
+.man-dot{width:16px;height:16px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px}
+.man-name{flex:1;font-size:13.5px;font-weight:500}
+.icon-pick{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;max-height:132px;overflow-y:auto;padding:4px;border:1px solid var(--border2);border-radius:var(--r3);background:var(--surface2)}
+.icon-opt{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:17px;border-radius:var(--r3);cursor:pointer;color:var(--text2);transition:all .12s}
+.icon-opt:hover{background:var(--bg2);color:var(--text)}
+.icon-opt.on{background:var(--accent);color:#fff}
+.color-pick{display:flex;gap:6px;flex-wrap:wrap}
+.color-opt{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .12s}
+.color-opt:hover{transform:scale(1.12)}
+.color-opt.on{border-color:var(--text);transform:scale(1.12)}
+
 /* ── Mobile nav ── */
 .mobnav{display:none}
 @media(max-width:768px){
   aside{display:none}
   .page{padding:1.25rem 1.1rem;padding-bottom:6rem}
   .ph h1{font-size:25px}
-  .mobnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(16px);border-top:1px solid var(--border);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:200;box-shadow:0 -4px 24px rgba(0,0,0,.08)}
-  .mobbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9px;font-weight:600;color:var(--text3);border:none;background:none;padding:5px 0;cursor:pointer;transition:color .15s;position:relative}
+  .mobnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(16px);border-top:1px solid var(--border);padding:8px 2px calc(8px + env(safe-area-inset-bottom));z-index:200;box-shadow:0 -4px 24px rgba(0,0,0,.08)}
+  .mobbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:8.5px;font-weight:600;color:var(--text3);border:none;background:none;padding:5px 0;cursor:pointer;transition:color .15s;position:relative;min-width:0}
   .mobbtn.on{color:var(--accent-text)}
   .mobbtn.on i{transform:translateY(-1px)}
   .mobbtn i{font-size:20px;transition:transform .15s}
@@ -452,6 +515,8 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
   <button class="nav-btn" id="nav-stats" onclick="nav('stats')"><i class="ti ti-chart-histogram"></i>Stats &amp; Tracking</button>
   <button class="nav-btn" id="nav-running" onclick="nav('running')"><i class="ti ti-run"></i>Running</button>
   <button class="nav-btn" id="nav-finance" onclick="nav('finance')"><i class="ti ti-wallet"></i>Finance</button>
+  <button class="nav-btn" id="nav-goals" onclick="nav('goals')"><i class="ti ti-target-arrow"></i>Goals</button>
+  <button class="nav-btn" id="nav-coach" onclick="nav('coach')"><i class="ti ti-sparkles"></i>AI Coach</button>
   <div class="side-foot">
     <button class="nav-btn" onclick="openData()"><i class="ti ti-database"></i>Data &amp; backup</button>
     <button class="nav-btn" id="theme-btn" onclick="toggleTheme()"><i class="ti ti-moon" id="theme-icon"></i><span id="theme-label">Dark mode</span></button>
@@ -556,15 +621,15 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
     <div class="card">
       <div class="card-title">Sleep &amp; recovery</div>
       <div class="track-grid">
-        <div class="field"><label>Hours slept</label><input type="number" step="0.1" min="0" max="16" class="fi" id="t-sleep" placeholder="8.0"></div>
+        <div class="field"><label>Bedtime</label><input type="time" class="fi" id="t-bedtime" onchange="autoSleep()"></div>
+        <div class="field"><label>Wake time</label><input type="time" class="fi" id="t-waketime" onchange="autoSleep()"></div>
+      </div>
+      <div class="track-grid mt2">
+        <div class="field"><label>Hours slept <span class="hint f12">(auto from bed &amp; wake)</span></label><input type="number" step="0.1" min="0" max="16" class="fi" id="t-sleep" placeholder="—" readonly style="cursor:not-allowed;opacity:.85"></div>
         <div class="slider-field">
           <div class="slider-head"><label>Sleep quality</label><span class="slider-val" id="t-sleepq-v">5</span></div>
           <input type="range" min="1" max="10" value="5" class="tslider" id="t-sleepq" oninput="sliderShow('t-sleepq','t-sleepq-v')">
         </div>
-      </div>
-      <div class="track-grid mt2">
-        <div class="field"><label>Bedtime</label><input type="time" class="fi" id="t-bedtime"></div>
-        <div class="field"><label>Wake time</label><input type="time" class="fi" id="t-waketime"></div>
       </div>
       <div class="check-grid mt2">
         <div class="check-row"><label for="t-sleepalarm">Woke without alarm</label><input type="checkbox" id="t-sleepalarm"></div>
@@ -794,7 +859,7 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
   <!-- BUDGETS -->
   <div id="fin-budgets" class="hidden">
     <div class="card">
-      <div class="card-title">Monthly budget</div>
+      <div class="btwn" style="margin-bottom:6px"><div class="card-title" style="margin-bottom:0">Monthly budget</div><button class="btn sm" onclick="openCatMan('expense')"><i class="ti ti-settings"></i>Categories</button></div>
       <p class="f13 muted" style="margin:.4rem 0 1rem">Set a monthly limit per category. Progress reflects this month's spending.</p>
       <div class="fin-kpi-big" id="fin-budget-summary" style="grid-template-columns:1fr 1fr 1fr"></div>
       <div id="fin-budget-list" style="margin-top:1.25rem"></div>
@@ -848,8 +913,6 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
 
     <!-- ROUTINE TAB -->
     <div id="train-routine">
-      <div class="section-eyebrow">This week</div>
-      <div class="sgrid" id="week-summary"></div>
       <div class="card" style="margin-bottom:14px">
         <div class="btwn" style="margin-bottom:11px">
           <div><span class="fw6 f14" id="routine-prog-title">Today's routine</span><div class="f12 muted" id="routine-prog-sub" style="margin-top:2px">Tap a block to check it off</div></div>
@@ -884,15 +947,42 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
   </div>
 </div>
 
+<!-- ──── GOALS ──── -->
+<div id="page-goals" class="page">
+  <div class="ph">
+    <div class="ph-row">
+      <div><h1>Goals</h1><p>Your long-term goals — the relevant context, the routine behind them, and how far along you are.</p></div>
+      <button class="btn grn" onclick="openGoalModal()"><i class="ti ti-plus"></i>New goal</button>
+    </div>
+  </div>
+  <div id="goals-list"></div>
+</div>
+
+<!-- ──── AI COACH ──── -->
+<div id="page-coach" class="page" style="max-width:760px">
+  <div class="ph">
+    <div class="ph-row">
+      <div><h1>AI Coach</h1><p id="coach-sub">Your personal performance mentor — it can see your real numbers and gives specific, direct advice.</p></div>
+      <div id="coach-header-actions"></div>
+    </div>
+  </div>
+  <div id="coach-body"></div>
+</div>
+
 </main>
+
+<!-- Coach floating button -->
+<button class="fab hidden" id="coach-fab" onclick="nav('coach')" title="Ask your AI coach" aria-label="AI Coach"><i class="ti ti-sparkles"></i></button>
 
 <!-- ── Mobile nav ── -->
 <nav class="mobnav">
   <button class="mobbtn on" id="mob-dash" onclick="nav('dash')"><i class="ti ti-layout-dashboard"></i>Home</button>
-  <button class="mobbtn" id="mob-train" onclick="nav('train')"><i class="ti ti-barbell"></i>Training</button>
+  <button class="mobbtn" id="mob-train" onclick="nav('train')"><i class="ti ti-barbell"></i>Train</button>
   <button class="mobbtn" id="mob-stats" onclick="nav('stats')"><i class="ti ti-chart-histogram"></i>Stats</button>
-  <button class="mobbtn" id="mob-running" onclick="nav('running')"><i class="ti ti-run"></i>Running</button>
+  <button class="mobbtn" id="mob-running" onclick="nav('running')"><i class="ti ti-run"></i>Run</button>
   <button class="mobbtn" id="mob-finance" onclick="nav('finance')"><i class="ti ti-wallet"></i>Money</button>
+  <button class="mobbtn" id="mob-goals" onclick="nav('goals')"><i class="ti ti-target-arrow"></i>Goals</button>
+  <button class="mobbtn" id="mob-coach" onclick="nav('coach')"><i class="ti ti-sparkles"></i>Coach</button>
 </nav>
 </div>
 
@@ -910,18 +1000,7 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
   <div class="fg"><label>Description</label><textarea class="fta" id="mb-desc" placeholder="Details about this block..."></textarea></div>
   <div class="fg">
     <label>Type</label>
-    <div class="typesel">
-      <span class="topt" data-t="sun">☀️ Sunlight</span>
-      <span class="topt" data-t="run">🏃 Run</span>
-      <span class="topt" data-t="morning">🌅 Morning</span>
-      <span class="topt" data-t="stretch">🧘 Stretch</span>
-      <span class="topt" data-t="focus">🧠 Focus</span>
-      <span class="topt" data-t="fuel">🍽️ Nutrition</span>
-      <span class="topt" data-t="train">💪 Training</span>
-      <span class="topt" data-t="free">🎯 Free time</span>
-      <span class="topt" data-t="wind">🌙 Wind-down</span>
-      <span class="topt" data-t="sleep">😴 Sleep</span>
-    </div>
+    <div class="typesel" id="mb-typesel"></div>
   </div>
   <div class="row" style="justify-content:flex-end;margin-top:6px">
     <button class="btn" onclick="closeModal('modal-block')">Cancel</button>
@@ -1062,7 +1141,7 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
   </div>
   <div class="fg fin-amt-input"><label>Amount</label><div class="input-prefix"><span>kr.</span><input type="number" step="0.01" min="0" class="fi" id="tx-amount" placeholder="0,00"></div></div>
   <div class="frow">
-    <div class="fg"><label>Category</label><select class="fsel" id="tx-category"></select></div>
+    <div class="fg"><label style="display:flex;justify-content:space-between;align-items:center">Category <button type="button" class="btn ico" style="padding:3px 6px" onclick="openCatMan(S.finType)" title="Manage categories"><i class="ti ti-settings" style="font-size:14px"></i></button></label><select class="fsel" id="tx-category"></select></div>
     <div class="fg"><label>Date</label><input type="date" class="fi" id="tx-date"></div>
   </div>
   <div class="frow">
@@ -1110,6 +1189,94 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
     <button class="btn red sm" onclick="clearData('running')">Clear running</button>
     <button class="btn red sm" onclick="clearData('finance')">Clear finance</button>
     <button class="btn red sm" onclick="clearData('all')">Clear everything</button>
+  </div>
+</div>
+</div>
+
+<!-- Goal editor -->
+<div class="overlay hidden" id="modal-goal">
+<div class="modal">
+  <div class="mhead"><span id="goal-modal-title">New goal</span><button class="btn ico" onclick="closeModal('modal-goal')"><i class="ti ti-x"></i></button></div>
+  <div class="fg"><label>Goal</label><input type="text" class="fi" id="goal-title" placeholder="e.g. Sub-20 minute 5K"></div>
+  <div class="frow">
+    <div class="fg"><label>Target date</label><input type="date" class="fi" id="goal-target"></div>
+    <div class="fg"><label>Status</label><select class="fsel" id="goal-status">
+      <option value="notstarted">Not started</option>
+      <option value="inprogress" selected>In progress</option>
+      <option value="ontrack">On track</option>
+      <option value="atrisk">At risk</option>
+      <option value="done">Done</option>
+    </select></div>
+  </div>
+  <div class="fg">
+    <div class="slider-head"><label>Progress</label><span class="slider-val" id="goal-prog-v">0%</span></div>
+    <input type="range" min="0" max="100" step="5" value="0" class="tslider" id="goal-prog" oninput="document.getElementById('goal-prog-v').textContent=this.value+'%'">
+  </div>
+  <div class="fg"><label>Why it matters / relevant info</label><textarea class="fta" id="goal-info" placeholder="Context, the deeper reason, milestones, metrics, anything relevant..."></textarea></div>
+  <div class="fg"><label>Routine / habits behind it</label><textarea class="fta" id="goal-routine" placeholder="The recurring actions that drive this goal — e.g. 3 runs/week, mobility daily..."></textarea></div>
+  <div class="row" style="justify-content:flex-end;margin-top:6px">
+    <button class="btn red sm" id="goal-del-btn" style="margin-right:auto;display:none" onclick="deleteGoal()"><i class="ti ti-trash"></i>Delete</button>
+    <button class="btn" onclick="closeModal('modal-goal')">Cancel</button>
+    <button class="btn grn" onclick="saveGoal()"><i class="ti ti-check"></i>Save goal</button>
+  </div>
+</div>
+</div>
+
+<!-- Category manager -->
+<div class="overlay hidden" id="modal-catman">
+<div class="modal">
+  <div class="mhead"><span>Manage categories</span><button class="btn ico" onclick="closeModal('modal-catman')"><i class="ti ti-x"></i></button></div>
+  <div class="fseg" style="margin-bottom:1rem">
+    <div class="fseg-opt exp on" id="cm-seg-exp" onclick="setCatManType('expense')"><i class="ti ti-arrow-down-right"></i>Expense</div>
+    <div class="fseg-opt inc" id="cm-seg-inc" onclick="setCatManType('income')"><i class="ti ti-arrow-up-right"></i>Income</div>
+  </div>
+  <div id="cm-list" style="margin-bottom:1.1rem"></div>
+  <div class="divider"></div>
+  <div class="card-title">Add a category</div>
+  <div class="fg"><label>Name</label><input type="text" class="fi" id="cm-name" placeholder="e.g. Coffee, Pets, Side income..."></div>
+  <div class="fg"><label>Colour</label><div class="color-pick" id="cm-colors"></div></div>
+  <div class="fg"><label>Icon</label><div class="icon-pick" id="cm-icons"></div></div>
+  <button class="btn pri full" onclick="addCategory()"><i class="ti ti-plus"></i>Add category</button>
+</div>
+</div>
+
+<!-- Block-type manager -->
+<div class="overlay hidden" id="modal-typeman">
+<div class="modal">
+  <div class="mhead"><span id="tm-title">Block types</span><button class="btn ico" onclick="closeModal('modal-typeman')"><i class="ti ti-x"></i></button></div>
+  <p class="hint f12" style="margin-bottom:12px">Types colour-code your routine blocks. Add your own or remove ones you don't use.</p>
+  <div id="tm-list" style="margin-bottom:1.1rem"></div>
+  <div class="divider"></div>
+  <div class="card-title">Add a type</div>
+  <div class="frow">
+    <div class="fg"><label>Name</label><input type="text" class="fi" id="tm-name" placeholder="e.g. Meditation"></div>
+    <div class="fg"><label>Emoji</label><input type="text" class="fi" id="tm-emoji" placeholder="🧘" maxlength="4"></div>
+  </div>
+  <div class="fg"><label>Colour</label><div class="color-pick" id="tm-colors"></div></div>
+  <button class="btn pri full" onclick="addBlockType()"><i class="ti ti-plus"></i>Add type</button>
+</div>
+</div>
+
+<!-- Coach settings -->
+<div class="overlay hidden" id="modal-coach-settings">
+<div class="modal">
+  <div class="mhead"><span>Coach settings</span><button class="btn ico" onclick="closeModal('modal-coach-settings')"><i class="ti ti-x"></i></button></div>
+  <div class="card-title">API key</div>
+  <div class="key-mask" id="cs-key-mask" style="margin-bottom:10px">No key set</div>
+  <div class="row wrap" style="margin-bottom:8px">
+    <button class="btn red sm" onclick="clearAiKey()"><i class="ti ti-trash"></i>Remove key</button>
+  </div>
+  <div class="f12 muted" style="margin-bottom:14px;line-height:1.5"><i class="ti ti-lock" style="vertical-align:-1px"></i> Stored only in this browser. Sent only to Google when you ask a question. Never synced or shared.</div>
+  <div class="divider"></div>
+  <div class="card-title">Model <span class="card-sub">set in code — current: <span class="mono" id="cs-model">gemini-2.0-flash</span></span></div>
+  <p class="f12 muted" style="margin-bottom:14px;line-height:1.5">To switch models, change the <span class="mono">COACH.MODEL</span> value near the top of the AI Coach code (e.g. to <span class="mono">gemini-2.5-pro</span>).</p>
+  <div class="divider"></div>
+  <div class="card-title">Coach style / persona</div>
+  <p class="f12 muted" style="margin-bottom:8px;line-height:1.5">This is the system prompt sent with every question. Make it yours.</p>
+  <textarea class="fta" id="cs-prompt" style="min-height:160px"></textarea>
+  <div class="row" style="justify-content:flex-end;margin-top:10px">
+    <button class="btn sm" onclick="resetCoachPrompt()"><i class="ti ti-refresh"></i>Reset to default</button>
+    <button class="btn pri sm" onclick="saveCoachPrompt()"><i class="ti ti-check"></i>Save style</button>
   </div>
 </div>
 </div>
@@ -1269,12 +1436,26 @@ const STRETCHES = [
   {id:'s12',name:'Adductor / Groin Stretch',muscle:'Inner thighs',group:'lower',dur:'45s each side',desc:'Wide stance lunge, drop knee to the side. Or seated butterfly with feet together. Both work.',benefit:'Floorball-essential. Cutting and lateral movement demand mobile adductors.'},
   {id:'s13',name:'Neck Rolls',muscle:'Cervical spine',group:'upper',dur:'30s each side',desc:'Tilt ear to shoulder, slowly roll chin to chest, to other side. Never roll fully backward. Slow and gentle.',benefit:'Releases tension from training and screen time. Keeps neck mobile and pain-free.'},
   {id:'s14',name:'IT Band Stretch',muscle:'IT band / Outer quad',group:'lower',dur:'45s each side',desc:'Cross one leg behind the other, lean sideways toward the back leg. Feel the stretch down outer thigh.',benefit:'Prevents the most common knee pain in runners and athletes after heavy leg days.'},
+  {id:'s15',name:'Ankle Mobility',muscle:'Ankles / Achilles',group:'lower',dur:'30s each direction',desc:'Lift one foot and draw slow ankle circles both directions, then point and flex. Add knee-to-wall dorsiflexion drives: knee tracks over toes without the heel lifting.',benefit:'Improves dorsiflexion for deeper squats, stronger sprint push-off and safer plyo landings. Cuts ankle-sprain risk on floorball cuts.'},
+];
+
+const DEF_BLOCK_TYPES=[
+  {t:'sun',label:'Sunlight',emoji:'\u2600\uFE0F',color:'#EF9F27'},
+  {t:'run',label:'Run',emoji:'\uD83C\uDFC3',color:'#1D9E75'},
+  {t:'morning',label:'Morning',emoji:'\uD83C\uDF05',color:'#BA7517'},
+  {t:'stretch',label:'Stretch',emoji:'\uD83E\uDDD8',color:'#7F77DD'},
+  {t:'focus',label:'Focus',emoji:'\uD83E\uDDE0',color:'#D4537E'},
+  {t:'fuel',label:'Nutrition',emoji:'\uD83C\uDF7D\uFE0F',color:'#378ADD'},
+  {t:'train',label:'Training',emoji:'\uD83D\uDCAA',color:'#1D9E75'},
+  {t:'free',label:'Free time',emoji:'\uD83C\uDFAF',color:'#888780'},
+  {t:'wind',label:'Wind-down',emoji:'\uD83C\uDF19',color:'#7F77DD'},
+  {t:'sleep',label:'Sleep',emoji:'\uD83D\uDE34',color:'#3C3489'},
 ];
 
 /* ─────────────────────────────────────────
    STORAGE
 ───────────────────────────────────────── */
-const K={routine:'li_r5',workouts:'li_w5',exercises:'li_e5',sdone:'li_sd5',aw:'li_aw5',tracking:'li_tracking',runs:'li_runs',theme:'li_theme',oldlogs:'li_l5',finance:'li_finance',budgets:'li_budgets',rdone:'li_rdone'};
+const K={routine:'li_r5',workouts:'li_w5',exercises:'li_e5',sdone:'li_sd5',aw:'li_aw5',tracking:'li_tracking',runs:'li_runs',theme:'li_theme',oldlogs:'li_l5',finance:'li_finance',budgets:'li_budgets',rdone:'li_rdone',aikey:'li_aikey',coachprompt:'li_coachprompt',expcats:'li_expcats',inccats:'li_inccats',blocktypes:'li_blocktypes',goals:'li_goals'};
 const load=(k,fb)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch{return fb}};
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){console.error(e)}if(typeof syncOnLocalChange==='function')syncOnLocalChange(k);};
 
@@ -1334,6 +1515,13 @@ let S={
   dashChartRange:14,
   copyBlockId:null,
   copyDays:[],
+  blockTypes:load(K.blocktypes,JSON.parse(JSON.stringify(DEF_BLOCK_TYPES))),
+  goals:load(K.goals,[]),
+  editGoalId:null,
+  catManType:'expense',
+  cmColor:null,cmIcon:null,
+  tmColor:null,
+  coach:{msgs:[],sending:false,lastSend:0},
 };
 
 /* ─────────────────────────────────────────
@@ -1349,6 +1537,7 @@ function setTheme(t){
   document.documentElement.setAttribute('data-theme',t);
   save(K.theme,t);
   const dark=t==='dark';
+  const tc=document.querySelector('meta[name="theme-color"]');if(tc)tc.setAttribute('content',dark?'#131218':'#f6f5f1');
   const ic=dark?'ti ti-sun':'ti ti-moon';
   ['theme-icon','theme-icon-2'].forEach(id=>{const e=document.getElementById(id);if(e)e.className=ic;});
   const lbl=document.getElementById('theme-label');if(lbl)lbl.textContent=dark?'Light mode':'Dark mode';
@@ -1382,6 +1571,7 @@ const C={accent:'#6b62d6',accentDark:'#3a3290',green:'#1a9b70',amber:'#b97312',p
    NAVIGATION
 ───────────────────────────────────────── */
 function nav(page){
+  checkDayRollover();
   // routine & stretch are now tabs inside the Training hub
   let trainTabTarget=null;
   if(page==='routine'){trainTabTarget='routine';page='train';}
@@ -1398,7 +1588,30 @@ function nav(page){
   if(page==='stats') renderStats();
   if(page==='running') renderRunning();
   if(page==='finance') renderFinance();
+  if(page==='goals') renderGoals();
+  if(page==='coach') renderCoach();
 }
+
+/* ─────────────────────────────────────────
+   DAY ROLLOVER — keeps "today" honest across midnight
+───────────────────────────────────────── */
+let _curDay=todayStr();
+function checkDayRollover(){
+  const t=todayStr();
+  if(t===_curDay)return;
+  const prev=_curDay;_curDay=t;
+  S.rday=todayDay();
+  // if the user was sitting on the old "today" in stats, move them to the new today
+  if(S.statsDate===prev)S.statsDate=t;
+  // re-render whatever page is open so progress bars / dates reset
+  const active=document.querySelector('.page.on');
+  if(active){const id=active.id.replace('page-','');
+    if(id==='dash')renderDash();else if(id==='train')renderTrain();
+    else if(id==='stats')renderStats();}
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkDayRollover();});
+window.addEventListener('focus',checkDayRollover);
+setInterval(checkDayRollover,60000);
 
 /* ─────────────────────────────────────────
    DATA HELPERS
@@ -1522,7 +1735,6 @@ function generateInsights(){
   const bedV=r30.filter(r=>r.bedtimeMin!=null).map(r=>parseFloat(r.bedtimeMin));
   if(bedV.length>=7){const sd=Math.sqrt(avg(bedV.map(x=>Math.pow(x-avg(bedV),2))));if(sd*60>75)ins.push({icon:'\uD83D\uDD52',text:'<strong>Inconsistent bedtime</strong> (\u00B1'+Math.round(sd*60)+'min). A steadier sleep schedule tends to lift sleep quality and energy.',type:'amb'});else ins.push({icon:'\uD83C\uDF19',text:'<strong>Steady bedtime.</strong> Your sleep schedule is consistent (\u00B1'+Math.round(sd*60)+'min) — great for recovery.',type:'grn'});}
   if(S.finance&&S.finance.length>=3){const cm=curMonth();const ci=sumAmt(txIncome(txInMonth(cm))),ce=sumAmt(txExpenses(txInMonth(cm)));if(ci>0){const sr=Math.round((ci-ce)/ci*100);ins.push({icon:'\uD83D\uDCB0',text:'<strong>'+monthName(cm)+' finances:</strong> '+fmtKr0(ce)+' spent, '+(sr>=0?sr+'% saved':'over budget')+'.',type:sr<0?'amb':sr>=20?'grn':''});}else if(ce>0)ins.push({icon:'\uD83D\uDCB0',text:'<strong>'+monthName(cm)+':</strong> '+fmtKr0(ce)+' spent so far this month.',type:''});}
-  if(!ins.length)ins.push({icon:'\uD83D\uDCC8',text:'<strong>Looking solid.</strong> Keep logging daily to unlock deeper trend insights.',type:''});
   return ins;
 }
 
@@ -1554,7 +1766,7 @@ function renderDash(){
   renderDashCharts();
   const nw=new Date(),nm=nw.getHours()*60+nw.getMinutes();
   const upcoming=(S.routine[S.rday]||[]).slice().sort((a,b)=>(a.time||'').localeCompare(b.time||'')).filter(b=>{const t=(b.time||'00:00').split(':').map(Number);return t[0]*60+t[1]>=nm;}).slice(0,4);
-  document.getElementById('dash-sched').innerHTML=upcoming.length?upcoming.map(b=>'<div class="rblock t-'+b.type+'" style="margin-bottom:4px"><div class="rbar"></div><div class="rtime">'+b.time+'</div><div class="rinfo"><div class="rtitle">'+b.title+'</div></div></div>').join(''):'<div class="empty" style="padding:1rem"><p>No more blocks today. Great work.</p></div>';
+  document.getElementById('dash-sched').innerHTML=upcoming.length?upcoming.map(b=>{const ti=blockTypeInfo(b.type);return '<div class="rblock t-'+b.type+'" style="margin-bottom:4px"><div class="rbar" style="background:'+ti.color+'"></div><div class="rtime">'+b.time+'</div><div class="rinfo"><div class="rtitle">'+(ti.emoji?ti.emoji+' ':'')+b.title+'</div></div></div>';}).join(''):'<div class="empty" style="padding:1rem"><p>No more blocks today. Great work.</p></div>';
   const lw=S.workouts[S.workouts.length-1];
   document.getElementById('dash-workout').innerHTML=lw?'<div class="btwn"><div><div class="fw5">'+(lw.name||'Workout')+'</div><div class="f12 muted" style="margin-top:2px">'+fmtDate(lw.date)+' \u00B7 '+lw.exercises.length+' exercises</div></div><button class="btn sm" onclick="viewWDetail(\''+lw.id+'\')">Details</button></div>':'<div class="muted f13">No workouts yet. Hit \u201CLog workout\u201D to start.</div>';
   const lr=[...S.runs].sort((a,b)=>a.date.localeCompare(b.date))[S.runs.length-1];
@@ -1627,6 +1839,23 @@ function timeToMin(t){if(!t||!(''+t).includes(':'))return null;const p=(''+t).sp
 function bedDecimal(t){const v=timeToMin(t);if(v==null)return null;return v<12?v+24:v;}
 function decToTime(v){if(v==null||isNaN(v))return '\u2014';let h=Math.floor(v),m=Math.round((v-h)*60);if(m===60){h++;m=0;}h=((h%24)+24)%24;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');}
 
+/* Hours slept derived from bedtime + wake time, so it's never entered by hand. */
+function computeSleepHours(bt,wt){
+  const bed=bedDecimal(bt),wake=timeToMin(wt);
+  if(bed==null||wake==null)return null;
+  let h=wake+24-bed;            // bed is shifted into the 12..36 range by bedDecimal
+  if(h>=24)h-=24;
+  if(h<=0||h>16)return null;    // implausible — ignore
+  return rd(h,1);
+}
+function autoSleep(){
+  const bt=document.getElementById('t-bedtime')?.value;
+  const wt=document.getElementById('t-waketime')?.value;
+  const el=document.getElementById('t-sleep');if(!el)return;
+  const h=computeSleepHours(bt,wt);
+  el.value=h==null?'':h;
+}
+
 function loadTrackingEntry(){
   const e=S.tracking.find(t=>t.date===S.statsDate)||{};
   const sv=(id,key)=>{const el=document.getElementById(id);if(!el)return;if(el.type==='checkbox')el.checked=!!e[key];else el.value=e[key]??'';};
@@ -1635,6 +1864,7 @@ function loadTrackingEntry(){
   ['sleepalarm','electrolytes','meds','supps','stretch','skincare'].forEach(k=>sv('t-'+k,k));
   ss('t-sleepq','t-sleepq-v','sleepq');ss('t-prodrating','t-prodrating-v','prodrating');
   ss('t-mood','t-mood-v','mood');ss('t-energy','t-energy-v','energy');
+  if(e.bedtime&&e.waketime)autoSleep();
   renderTrainingSummary();
 }
 function renderTrainingSummary(){
@@ -1653,7 +1883,10 @@ function saveTracking(btn){
   const gs=id=>parseInt(document.getElementById(id)?.value||'5');
   const gt=id=>document.getElementById(id)?.value||'';
   const bt=gt('t-bedtime'),wt=gt('t-waketime');
-  const entry={date:S.statsDate,sleep:gn('t-sleep'),water:gn('t-water'),deepwork:gn('t-deepwork'),screen:gn('t-screen'),weight:gn('t-weight'),reading:gn('t-reading'),sleepq:gs('t-sleepq'),prodrating:gs('t-prodrating'),mood:gs('t-mood'),energy:gs('t-energy'),bedtime:bt,waketime:wt,bedtimeMin:bedDecimal(bt),wakeMin:timeToMin(wt),sleepalarm:gb('t-sleepalarm'),electrolytes:gb('t-electrolytes'),meds:gb('t-meds'),supps:gb('t-supps'),stretch:gb('t-stretch'),skincare:gb('t-skincare'),notes:document.getElementById('t-notes')?.value||''};
+  const prev=S.tracking.find(t=>t.date===S.statsDate);
+  let sleepH=computeSleepHours(bt,wt);
+  if(sleepH==null){const cur=gn('t-sleep');sleepH=cur!=null?cur:(prev&&prev.sleep!=null?prev.sleep:null);}
+  const entry={date:S.statsDate,sleep:sleepH,water:gn('t-water'),deepwork:gn('t-deepwork'),screen:gn('t-screen'),weight:gn('t-weight'),reading:gn('t-reading'),sleepq:gs('t-sleepq'),prodrating:gs('t-prodrating'),mood:gs('t-mood'),energy:gs('t-energy'),bedtime:bt,waketime:wt,bedtimeMin:bedDecimal(bt),wakeMin:timeToMin(wt),sleepalarm:gb('t-sleepalarm'),electrolytes:gb('t-electrolytes'),meds:gb('t-meds'),supps:gb('t-supps'),stretch:gb('t-stretch'),skincare:gb('t-skincare'),notes:document.getElementById('t-notes')?.value||''};
   const i=S.tracking.findIndex(t=>t.date===S.statsDate);
   if(i!==-1)S.tracking[i]=entry;else S.tracking.push(entry);
   save(K.tracking,S.tracking);renderTrackHist();
@@ -1971,7 +2204,7 @@ function editRunFromDetail(){
 function deleteRun(){if(!confirm('Delete this run?'))return;S.runs=S.runs.filter(r=>r.id!==S.viewRunId);save(K.runs,S.runs);closeModal('modal-run-detail');renderRunning();}
 
 /* ============ FINANCE ============ */
-const EXP_CATS=[
+const DEF_EXP_CATS=[
   {k:'groceries',l:'Groceries',i:'ti-shopping-cart',c:'#1D9E75'},
   {k:'dining',l:'Dining out',i:'ti-tools-kitchen-2',c:'#BA7517'},
   {k:'transport',l:'Transport',i:'ti-car',c:'#185FA5'},
@@ -1988,7 +2221,7 @@ const EXP_CATS=[
   {k:'gifts',l:'Gifts & donations',i:'ti-gift',c:'#CA8A04'},
   {k:'other',l:'Other',i:'ti-dots',c:'#888780'}
 ];
-const INC_CATS=[
+const DEF_INC_CATS=[
   {k:'salary',l:'Salary',i:'ti-businessplan',c:'#1D9E75'},
   {k:'freelance',l:'Freelance',i:'ti-briefcase',c:'#185FA5'},
   {k:'investments',l:'Investments',i:'ti-trending-up',c:'#7F77DD'},
@@ -1997,7 +2230,9 @@ const INC_CATS=[
   {k:'refunds',l:'Refunds',i:'ti-receipt-refund',c:'#0891B2'},
   {k:'other',l:'Other',i:'ti-dots',c:'#888780'}
 ];
-function catList(type){return type==='income'?INC_CATS:EXP_CATS;}
+S.expCats=load(K.expcats,JSON.parse(JSON.stringify(DEF_EXP_CATS)));
+S.incCats=load(K.inccats,JSON.parse(JSON.stringify(DEF_INC_CATS)));
+function catList(type){return type==='income'?S.incCats:S.expCats;}
 function catInfo(type,k){return catList(type).find(c=>c.k===k)||{k:k,l:k||'Other',i:'ti-dots',c:'#888780'};}
 function hexA(hex,a){const h=hex.replace('#','');return 'rgba('+parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16)+','+a+')';}
 function fmtKr(n,dec){if(n==null||isNaN(n))n=0;dec=dec==null?2:dec;return n.toLocaleString('da-DK',{minimumFractionDigits:dec,maximumFractionDigits:dec})+' kr.';}
@@ -2051,7 +2286,7 @@ function populateMonthSelects(){
   const fm=document.getElementById('fin-filter-month');
   if(fm)fm.innerHTML='<option value="all">All months</option>'+months.map(m=>'<option value="'+m+'"'+(m===S.finFilterMonth?' selected':'')+'>'+monthName(m)+'</option>').join('');
   const fc=document.getElementById('fin-filter-cat');
-  if(fc)fc.innerHTML='<option value="all">All categories</option>'+EXP_CATS.map(c=>'<option value="expense:'+c.k+'"'+('expense:'+c.k===S.finFilterCat?' selected':'')+'>'+c.l+'</option>').join('')+INC_CATS.map(c=>'<option value="income:'+c.k+'"'+('income:'+c.k===S.finFilterCat?' selected':'')+'>'+c.l+' (income)</option>').join('');
+  if(fc)fc.innerHTML='<option value="all">All categories</option>'+S.expCats.map(c=>'<option value="expense:'+c.k+'"'+('expense:'+c.k===S.finFilterCat?' selected':'')+'>'+c.l+'</option>').join('')+S.incCats.map(c=>'<option value="income:'+c.k+'"'+('income:'+c.k===S.finFilterCat?' selected':'')+'>'+c.l+' (income)</option>').join('');
 }
 function finOvChange(v){S.finOvMonth=v;renderFinOverview();renderFinInsights();renderFinCharts();}
 
@@ -2125,7 +2360,7 @@ function renderFinBudgets(){
     finKpi('bal','Total budget',fmtKr0(totalBudget),monthName(m))+
     finKpi(totalBudget>0&&totalSpent>totalBudget?'exp':'inc','Spent',fmtKr0(totalSpent),totalBudget?pct+'% of budget':'no budget set')+
     finKpi('net',totalBudget-totalSpent>=0?'Remaining':'Over by',fmtKr0(Math.abs(totalBudget-totalSpent)),totalBudget?(totalBudget-totalSpent>=0?'left this month':'reduce spending'):'');
-  document.getElementById('fin-budget-list').innerHTML=EXP_CATS.map(c=>{
+  document.getElementById('fin-budget-list').innerHTML=S.expCats.map(c=>{
     const b=S.budgets[c.k]||0,sp=byCat[c.k]||0;const p=b>0?Math.min(100,Math.round(sp/b*100)):0;const over=b>0&&sp>b;
     return '<div class="budget-row"><div class="budget-head"><span style="display:flex;align-items:center;gap:7px"><span class="cat-dot" style="background:'+c.c+'"></span><span class="fw5">'+c.l+'</span></span><span class="f12" style="'+(over?'color:var(--pink-text);font-weight:700':'color:var(--text2)')+'">'+fmtKr0(sp)+(b>0?' / '+fmtKr0(b):'')+(over?' \u00B7 over':'')+'</span></div><div class="budget-bar-wrap"><div class="budget-bar" style="width:'+p+'%;background:'+(over?'var(--pink)':p>=85?'var(--amber)':c.c)+'"></div></div><div class="row" style="margin-top:7px;gap:8px;align-items:center"><span class="f12 hint">Monthly limit</span><div class="input-prefix" style="width:130px"><span style="font-size:12px">kr.</span><input type="number" min="0" step="50" class="fi" style="padding-left:30px;text-align:right;padding-top:5px;padding-bottom:5px" value="'+(b||'')+'" placeholder="0" onchange="saveBudget(\''+c.k+'\',this.value)"></div></div></div>';
   }).join('');
@@ -2212,8 +2447,9 @@ function renderRoutine(){
   if(!blocks.length){el.innerHTML='<div class="empty"><i class="ti ti-calendar-off"></i><p>No blocks for this day.<br>Add one with the button above.</p></div>';return;}
   el.innerHTML='<div class="rlist" id="rlist">'+blocks.map(b=>{
     const isDone=done.includes(b.id);
-    const check=isToday?'<button class="rcheck'+(isDone?' on':'')+'" onclick="toggleRDone(event,'+b.id+')" title="Mark done" aria-label="Mark done"><i class="ti ti-'+(isDone?'check':'circle')+'"></i></button>':'<div class="rbar"></div>';
-    return '<div class="rblock t-'+b.type+(isDone?' rdone':'')+'" draggable="true" data-id="'+b.id+'"><i class="ti ti-grip-vertical dhandle"></i>'+check+'<div class="rtime">'+(b.time||'')+'</div><div class="rinfo"><div class="rtitle">'+b.title+'</div>'+(b.desc?'<div class="rdesc">'+b.desc+'</div>':'')+'</div><div class="ract"><button class="btn ico" onclick="openCopyBlock('+b.id+')" title="Copy to other days"><i class="ti ti-copy"></i></button><button class="btn ico" onclick="openBlockModal('+b.id+')" title="Edit"><i class="ti ti-pencil"></i></button><button class="btn ico" onclick="delBlock('+b.id+')" title="Delete"><i class="ti ti-trash"></i></button></div></div>';
+    const ti=blockTypeInfo(b.type);
+    const check=isToday?'<button class="rcheck'+(isDone?' on':'')+'" onclick="toggleRDone(event,'+b.id+')" title="Mark done" aria-label="Mark done"><i class="ti ti-'+(isDone?'check':'circle')+'"></i></button>':'<div class="rbar" style="background:'+ti.color+'"></div>';
+    return '<div class="rblock t-'+b.type+(isDone?' rdone':'')+'" draggable="true" data-id="'+b.id+'"><i class="ti ti-grip-vertical dhandle"></i>'+check+'<div class="rtime">'+(b.time||'')+'</div><div class="rinfo"><div class="rtitle">'+(ti.emoji?ti.emoji+' ':'')+b.title+'</div>'+(b.desc?'<div class="rdesc">'+b.desc+'</div>':'')+'</div><div class="ract"><button class="btn ico" onclick="openCopyBlock('+b.id+')" title="Copy to other days"><i class="ti ti-copy"></i></button><button class="btn ico" onclick="openBlockModal('+b.id+')" title="Edit"><i class="ti ti-pencil"></i></button><button class="btn ico" onclick="delBlock('+b.id+')" title="Delete"><i class="ti ti-trash"></i></button></div></div>';
   }).join('')+'</div>';
   el.querySelectorAll('.rblock').forEach(r=>{
     r.addEventListener('dragstart',e=>{dragSrc=r;r.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
@@ -2238,6 +2474,13 @@ function toggleRDone(ev,id){
   save(K.rdone,S.rdone);renderRoutine();
 }
 function setRDay(d){S.rday=d;renderRoutine();}
+function blockTypeInfo(t){return S.blockTypes.find(x=>x.t===t)||{t:t,label:t||'Other',emoji:'',color:'#888780'};}
+function renderMbTypesel(sel){
+  const el=document.getElementById('mb-typesel');if(!el)return;
+  el.innerHTML=S.blockTypes.map(bt=>'<span class="topt'+(bt.t===sel?' on':'')+'" data-t="'+bt.t+'" onclick="pickBlockType(\''+bt.t+'\')">'+(bt.emoji?bt.emoji+' ':'')+bt.label+'</span>').join('')+
+    '<span class="topt" style="border-style:dashed" onclick="openTypeMan()"><i class="ti ti-settings" style="font-size:12px;vertical-align:-1px"></i> Manage</span>';
+}
+function pickBlockType(t){document.querySelectorAll('#mb-typesel .topt').forEach(o=>o.classList.toggle('on',o.dataset.t===t));}
 function openBlockModal(id){
   S.editBlock=id?((S.routine[S.rday]||[]).find(b=>b.id===id)||null):null;
   document.getElementById('mb-heading').textContent=id?'Edit block':'Add block';
@@ -2245,11 +2488,38 @@ function openBlockModal(id){
   document.getElementById('mb-dur').value=S.editBlock&&S.editBlock.duration||'';
   document.getElementById('mb-ttl').value=S.editBlock&&S.editBlock.title||'';
   document.getElementById('mb-desc').value=S.editBlock&&S.editBlock.desc||'';
-  document.querySelectorAll('.topt').forEach(o=>o.classList.toggle('on',o.dataset.t===(S.editBlock&&S.editBlock.type||'')));
+  renderMbTypesel(S.editBlock&&S.editBlock.type||(S.blockTypes[0]&&S.blockTypes[0].t)||'free');
   document.getElementById('modal-block').classList.remove('hidden');
 }
 function delBlock(id){if(!confirm('Delete this block?'))return;S.routine[S.rday]=(S.routine[S.rday]||[]).filter(b=>b.id!=id);save(K.routine,S.routine);renderRoutine();}
-function saveBlock(){const t=document.getElementById('mb-ttl').value.trim();if(!t){alert('Please add a title.');return;}const to=document.querySelector('.topt.on');const entry={time:document.getElementById('mb-time').value,duration:document.getElementById('mb-dur').value,title:t,desc:document.getElementById('mb-desc').value.trim(),type:to?to.dataset.t:'free'};if(!S.routine[S.rday])S.routine[S.rday]=[];if(S.editBlock){const i=S.routine[S.rday].findIndex(b=>b.id===S.editBlock.id);if(i!==-1)S.routine[S.rday][i]={...S.editBlock,...entry};}else S.routine[S.rday].push({id:Date.now(),...entry});save(K.routine,S.routine);closeModal('modal-block');renderRoutine();}
+function saveBlock(){const t=document.getElementById('mb-ttl').value.trim();if(!t){alert('Please add a title.');return;}const to=document.querySelector('#mb-typesel .topt.on');const entry={time:document.getElementById('mb-time').value,duration:document.getElementById('mb-dur').value,title:t,desc:document.getElementById('mb-desc').value.trim(),type:to?to.dataset.t:'free'};if(!S.routine[S.rday])S.routine[S.rday]=[];if(S.editBlock){const i=S.routine[S.rday].findIndex(b=>b.id===S.editBlock.id);if(i!==-1)S.routine[S.rday][i]={...S.editBlock,...entry};}else S.routine[S.rday].push({id:Date.now(),...entry});save(K.routine,S.routine);closeModal('modal-block');renderRoutine();}
+
+/* ── Block-type manager ── */
+const PALETTE=['#6b62d6','#1D9E75','#D4537E','#BA7517','#185FA5','#EF9F27','#9333EA','#0E9AA7','#E0524F','#3C3489','#16A34A','#888780'];
+function openTypeMan(){S.tmColor=PALETTE[0];renderTypeMan();renderColorPick('tm-colors','tmColor');document.getElementById('tm-emoji').value='';document.getElementById('tm-name').value='';document.getElementById('modal-typeman').classList.remove('hidden');}
+function renderTypeMan(){
+  document.getElementById('tm-list').innerHTML=S.blockTypes.map(bt=>'<div class="man-row"><span class="man-dot" style="background:'+bt.color+'">'+(bt.emoji||'')+'</span><span class="man-name">'+bt.label+'</span><button class="btn ico" onclick="removeBlockType(\''+bt.t+'\')" title="Remove"><i class="ti ti-trash"></i></button></div>').join('')||'<div class="hint f13">No types yet — add one below.</div>';
+}
+function addBlockType(){
+  const name=document.getElementById('tm-name').value.trim();
+  if(!name){alert('Give the type a name.');return;}
+  const emoji=document.getElementById('tm-emoji').value.trim();
+  const key='ct'+Date.now().toString(36);
+  S.blockTypes.push({t:key,label:name,emoji:emoji,color:S.tmColor||PALETTE[0]});
+  save(K.blocktypes,S.blockTypes);
+  document.getElementById('tm-name').value='';document.getElementById('tm-emoji').value='';
+  renderTypeMan();
+  if(!document.getElementById('modal-block').classList.contains('hidden'))renderMbTypesel(document.querySelector('#mb-typesel .topt.on')?.dataset.t);
+  toast('Type added');
+}
+function removeBlockType(t){
+  if(S.blockTypes.length<=1){alert('Keep at least one type.');return;}
+  if(!confirm('Remove this type? Existing blocks using it keep their colour but the type leaves the list.'))return;
+  S.blockTypes=S.blockTypes.filter(x=>x.t!==t);
+  save(K.blocktypes,S.blockTypes);
+  renderTypeMan();
+  if(!document.getElementById('modal-block').classList.contains('hidden'))renderMbTypesel(document.querySelector('#mb-typesel .topt.on')?.dataset.t);
+}
 function openCopyBlock(id){
   const b=(S.routine[S.rday]||[]).find(x=>x.id===id);if(!b)return;
   S.copyBlockId=id;S.copyDays=[];
@@ -2297,25 +2567,9 @@ function trainTab(tab){
   document.querySelectorAll('#page-train .page-tabs .page-tab').forEach((b,i)=>b.classList.toggle('on',tabs[i]===tab));
   tabs.forEach(t=>{const el=document.getElementById('train-'+t);if(el)el.classList.toggle('hidden',t!==tab);});
   const act=document.getElementById('train-action');
-  if(tab==='routine'){act.innerHTML='<button class="btn pri" onclick="openBlockModal()"><i class="ti ti-plus"></i>Add block</button>';renderWeekSummary();renderRoutine();}
+  if(tab==='routine'){act.innerHTML='<button class="btn pri" onclick="openBlockModal()"><i class="ti ti-plus"></i>Add block</button>';renderRoutine();}
   else if(tab==='workouts'){act.innerHTML='<button class="btn grn" onclick="startWorkout()"><i class="ti ti-player-play"></i>Start workout</button>';renderWorkouts();}
   else{act.innerHTML='<button class="btn" onclick="resetStretches()"><i class="ti ti-refresh"></i>Reset today</button>';renderStretches();}
-}
-function renderWeekSummary(){
-  const el=document.getElementById('week-summary');if(!el)return;
-  const now=new Date();const mon=new Date(now);mon.setDate(now.getDate()-((now.getDay()+6)%7));mon.setHours(0,0,0,0);
-  const inWeek=d=>{const x=new Date(d+'T12:00:00');return x>=mon;};
-  const woDates=new Set(S.workouts.filter(w=>inWeek(w.date)).map(w=>w.date));
-  const wkRuns=S.runs.filter(r=>inWeek(r.date));
-  const wkKm=rd(wkRuns.reduce((s,r)=>s+(parseFloat(r.distance)||0),0),1);
-  const stretchDays=Object.keys(S.sdone).filter(d=>inWeek(d)&&(S.sdone[d]||[]).length).length;
-  const items=[
-    {l:'Workouts',v:woDates.size,s:'this week'},
-    {l:'Runs',v:wkRuns.length,s:wkKm+' km'},
-    {l:'Stretch days',v:stretchDays,s:'this week'},
-    {l:'Log streak',v:calcLogStreak()+'d',s:'keep it going'},
-  ];
-  el.innerHTML=items.map(x=>'<div class="stat"><div class="stat-lbl">'+x.l+'</div><div class="stat-val">'+x.v+'</div><div class="stat-sub">'+x.s+'</div></div>').join('');
 }
 function renderWorkouts(){
   const prs=calcPRs();const prE=Object.entries(prs).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
@@ -2370,9 +2624,401 @@ function setSFilt(f){S.sfilt=f;renderStretches();}
 function toggleSDone(id){const t=todayStr();if(!S.sdone[t])S.sdone[t]=[];const i=S.sdone[t].indexOf(id);if(i===-1)S.sdone[t].push(id);else S.sdone[t].splice(i,1);save(K.sdone,S.sdone);renderStretches();}
 function resetStretches(){S.sdone[todayStr()]=[];save(K.sdone,S.sdone);renderStretches();}
 
+
+/* ============ CATEGORY MANAGER ============ */
+const CAT_ICONS=['ti-shopping-cart','ti-tools-kitchen-2','ti-car','ti-home','ti-bolt','ti-repeat','ti-heart-rate-monitor','ti-barbell','ti-shopping-bag','ti-device-tv','ti-book-2','ti-plane','ti-pig-money','ti-gift','ti-businessplan','ti-briefcase','ti-trending-up','ti-building-bank','ti-receipt-refund','ti-coffee','ti-pizza','ti-dog','ti-cat','ti-music','ti-camera','ti-shirt','ti-gas-station','ti-bus','ti-phone','ti-wifi','ti-medical-cross','ti-pill','ti-school','ti-ticket','ti-beer','ti-cash','ti-credit-card','ti-wallet','ti-coin','ti-dots'];
+function renderColorPick(containerId,stateKey){
+  const el=document.getElementById(containerId);if(!el)return;
+  el.innerHTML=PALETTE.map(c=>'<span class="color-opt'+(S[stateKey]===c?' on':'')+'" style="background:'+c+'" onclick="pickColor(\''+containerId+'\',\''+stateKey+'\',\''+c+'\')"></span>').join('');
+}
+function pickColor(containerId,stateKey,c){S[stateKey]=c;renderColorPick(containerId,stateKey);}
+function renderIconPick(){
+  const el=document.getElementById('cm-icons');if(!el)return;
+  el.innerHTML=CAT_ICONS.map(ic=>'<span class="icon-opt'+(S.cmIcon===ic?' on':'')+'" onclick="pickCmIcon(\''+ic+'\')"><i class="ti '+ic+'"></i></span>').join('');
+}
+function pickCmIcon(ic){S.cmIcon=ic;renderIconPick();}
+function openCatMan(type){
+  S.catManType=type||'expense';
+  S.cmColor=PALETTE[0];S.cmIcon=CAT_ICONS[0];
+  document.getElementById('cm-name').value='';
+  setCatManType(S.catManType);
+  renderColorPick('cm-colors','cmColor');
+  renderIconPick();
+  document.getElementById('modal-catman').classList.remove('hidden');
+}
+function setCatManType(type){
+  S.catManType=type;
+  document.getElementById('cm-seg-exp').classList.toggle('on',type==='expense');
+  document.getElementById('cm-seg-inc').classList.toggle('on',type==='income');
+  renderCatManList();
+}
+function renderCatManList(){
+  const list=catList(S.catManType);
+  document.getElementById('cm-list').innerHTML=list.map(c=>'<div class="man-row"><span class="man-dot" style="background:'+c.c+'"><i class="ti '+c.i+'" style="font-size:10px"></i></span><span class="man-name">'+c.l+'</span><button class="btn ico" onclick="removeCategory(\''+c.k+'\')" title="Remove"><i class="ti ti-trash"></i></button></div>').join('')||'<div class="hint f13">No categories — add one below.</div>';
+}
+function addCategory(){
+  const name=document.getElementById('cm-name').value.trim();
+  if(!name){alert('Give the category a name.');return;}
+  const key='c'+Date.now().toString(36);
+  const cat={k:key,l:name,i:S.cmIcon||'ti-dots',c:S.cmColor||PALETTE[0]};
+  if(S.catManType==='income'){S.incCats.push(cat);save(K.inccats,S.incCats);}
+  else{S.expCats.push(cat);save(K.expcats,S.expCats);}
+  document.getElementById('cm-name').value='';
+  renderCatManList();
+  refreshCatDependentUI();
+  toast('Category added');
+}
+function removeCategory(k){
+  const list=catList(S.catManType);
+  if(list.length<=1){alert('Keep at least one category.');return;}
+  const used=S.finance.some(t=>t.type===S.catManType&&t.category===k);
+  if(!confirm('Remove this category?'+(used?'\n\nSome transactions use it — they keep their amount and show a fallback label.':'')))return;
+  if(S.catManType==='income'){S.incCats=S.incCats.filter(c=>c.k!==k);save(K.inccats,S.incCats);}
+  else{S.expCats=S.expCats.filter(c=>c.k!==k);save(K.expcats,S.expCats);if(S.budgets[k]){delete S.budgets[k];save(K.budgets,S.budgets);}}
+  renderCatManList();
+  refreshCatDependentUI();
+}
+function refreshCatDependentUI(){
+  // keep the open tx modal's dropdown + any finance views in sync
+  const txOpen=!document.getElementById('modal-tx').classList.contains('hidden');
+  if(txOpen)populateTxCategory(S.finType,document.getElementById('tx-category').value);
+  if(document.getElementById('page-finance').classList.contains('on'))renderFinance();
+}
+
+/* ============ GOALS ============ */
+const GOAL_STATUS={notstarted:'Not started',inprogress:'In progress',ontrack:'On track',atrisk:'At risk',done:'Done'};
+function renderGoals(){
+  const el=document.getElementById('goals-list');if(!el)return;
+  if(!S.goals.length){el.innerHTML='<div class="empty"><i class="ti ti-target-arrow"></i><p>No goals yet.<br>Add your first long-term goal with the button above.</p></div>';return;}
+  const order={done:5,atrisk:1,inprogress:2,ontrack:3,notstarted:4};
+  const sorted=[...S.goals].sort((a,b)=>(order[a.status]||9)-(order[b.status]||9));
+  el.innerHTML=sorted.map(g=>{
+    const prog=Math.max(0,Math.min(100,parseInt(g.progress)||0));
+    const barCol=g.status==='done'?'var(--green)':g.status==='atrisk'?'var(--amber)':'var(--accent)';
+    const tgt=g.target?fmtDateLong(g.target):null;
+    const overdue=g.target&&g.status!=='done'&&g.target<todayStr();
+    const meta=[];
+    if(tgt)meta.push('<i class="ti ti-flag" style="font-size:11px;vertical-align:-1px"></i> '+tgt+(overdue?' · overdue':''));
+    return '<div class="goal-card">'+
+      '<div class="goal-head"><div><div class="goal-title">'+esc(g.title)+'</div>'+(meta.length?'<div class="goal-meta" style="'+(overdue?'color:var(--pink-text)':'')+'">'+meta.join('')+'</div>':'')+'</div>'+
+      '<div class="goal-acts"><span class="status-pill st-'+g.status+'">'+(GOAL_STATUS[g.status]||g.status)+'</span><button class="btn ico" onclick="openGoalModal(\''+g.id+'\')" title="Edit"><i class="ti ti-pencil"></i></button></div></div>'+
+      (g.info?'<div class="goal-info">'+esc(g.info)+'</div>':'')+
+      '<div class="goal-prog-wrap"><div class="btwn f12 muted"><span>Progress</span><span class="fw6" style="color:var(--text)">'+prog+'%</span></div><div class="goal-prog-bar-wrap"><div class="goal-prog-bar" style="width:'+prog+'%;background:'+barCol+'"></div></div></div>'+
+      (g.routine?'<div class="goal-routine"><div class="goal-routine-lbl">Routine behind it</div>'+esc(g.routine)+'</div>':'')+
+    '</div>';
+  }).join('');
+}
+function esc(s){return (s==null?'':''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function openGoalModal(id){
+  const g=id?S.goals.find(x=>x.id===id):null;
+  S.editGoalId=g?g.id:null;
+  document.getElementById('goal-modal-title').textContent=g?'Edit goal':'New goal';
+  document.getElementById('goal-title').value=g?g.title:'';
+  document.getElementById('goal-target').value=g?(g.target||''):'';
+  document.getElementById('goal-status').value=g?g.status:'inprogress';
+  const prog=g?(parseInt(g.progress)||0):0;
+  document.getElementById('goal-prog').value=prog;document.getElementById('goal-prog-v').textContent=prog+'%';
+  document.getElementById('goal-info').value=g?(g.info||''):'';
+  document.getElementById('goal-routine').value=g?(g.routine||''):'';
+  document.getElementById('goal-del-btn').style.display=g?'':'none';
+  document.getElementById('modal-goal').classList.remove('hidden');
+}
+function saveGoal(){
+  const title=document.getElementById('goal-title').value.trim();
+  if(!title){alert('Give the goal a name.');return;}
+  const g={
+    id:S.editGoalId||('g'+Date.now()),
+    title:title,
+    target:document.getElementById('goal-target').value||'',
+    status:document.getElementById('goal-status').value,
+    progress:parseInt(document.getElementById('goal-prog').value)||0,
+    info:document.getElementById('goal-info').value.trim(),
+    routine:document.getElementById('goal-routine').value.trim(),
+    createdAt:S.editGoalId?(S.goals.find(x=>x.id===S.editGoalId)||{}).createdAt||Date.now():Date.now()
+  };
+  if(S.editGoalId){const i=S.goals.findIndex(x=>x.id===S.editGoalId);if(i!==-1)S.goals[i]=g;}else S.goals.push(g);
+  save(K.goals,S.goals);closeModal('modal-goal');renderGoals();
+}
+function deleteGoal(){
+  if(!S.editGoalId)return;
+  if(!confirm('Delete this goal?'))return;
+  S.goals=S.goals.filter(x=>x.id!==S.editGoalId);
+  save(K.goals,S.goals);closeModal('modal-goal');renderGoals();
+}
+
+/* ============ AI COACH ============ */
+/* Calls Google's Gemini API directly from the browser. Your key is stored only
+   in this browser (localStorage K.aikey) and is sent ONLY to Google's endpoint.
+   It is never written into the app code, never synced to GitHub, never logged. */
+const COACH={
+  MODEL:'gemini-2.0-flash',     // ← change this one line to switch model (e.g. 'gemini-2.5-pro')
+  MAX_OUTPUT_TOKENS:800,        // hard cap on reply length → keeps every call tiny & free
+  MIN_SEND_INTERVAL_MS:2500,    // throttle so the free-tier rate limit can't be tripped
+  MAX_QUESTION_CHARS:1500,      // cap the question length sent
+  MAX_HISTORY_MSGS:6,           // only the last few turns travel with each request
+  MAX_HISTORY_CHARS:600         // and each of those is trimmed
+};
+const DEF_COACH_PROMPT=`You are my elite personal performance coach. You can see a compact snapshot of my real tracked data below (sleep, hydration, deep work, weight, mood/energy, training, running, finances and goals).
+
+Rules:
+- Be concise and direct. No filler, no generic motivation, no long preambles.
+- Always reference my ACTUAL numbers from the snapshot.
+- Give at most 3 specific, actionable recommendations I can act on this week.
+- If a relevant metric is missing, tell me exactly what to start logging.
+- Speak plainly, like a sharp coach who respects my time. Short paragraphs or tight bullet points.`;
+function coachPrompt(){return load(K.coachprompt,DEF_COACH_PROMPT);}
+function getAiKey(){try{return localStorage.getItem(K.aikey)||'';}catch(e){return '';}}
+function setAiKeyStored(k){try{localStorage.setItem(K.aikey,k);return true;}catch(e){alert('This browser is blocking local storage, so the key cannot be saved. If you opened the file directly, try serving it or check your privacy settings.');return false;}}
+function removeAiKeyStored(){try{localStorage.removeItem(K.aikey);}catch(e){}}
+function maskKey(k){if(!k)return '';if(k.length<=10)return k.replace(/.(?=.{2})/g,'\u2022');return k.slice(0,4)+'\u2022'.repeat(Math.max(4,k.length-8))+k.slice(-4);}
+
+function renderCoachFab(){const f=document.getElementById('coach-fab');if(f)f.classList.toggle('hidden',!getAiKey());}
+
+function renderCoach(){
+  renderCoachFab();
+  const body=document.getElementById('coach-body');
+  const acts=document.getElementById('coach-header-actions');
+  const sub=document.getElementById('coach-sub');
+  if(!getAiKey()){
+    sub.textContent='Add a free Google Gemini API key to unlock your coach. Your key stays on this device only.';
+    acts.innerHTML='';
+    body.innerHTML=coachSetupHtml();
+    return;
+  }
+  sub.textContent='Your personal performance mentor — it can see your real numbers and gives specific, direct advice.';
+  acts.innerHTML='<button class="btn ico" onclick="openCoachSettings()" title="Coach settings"><i class="ti ti-settings"></i></button>';
+  body.innerHTML=
+    '<div class="coach-wrap">'+
+      '<div class="coach-suggest" id="coach-suggest"></div>'+
+      '<div class="coach-msgs" id="coach-msgs"></div>'+
+      '<div class="coach-input-row">'+
+        '<textarea class="fta" id="coach-q" placeholder="Ask your coach anything… e.g. what should I improve this week?" rows="1" oninput="coachAutoGrow(this)" onkeydown="coachKey(event)"></textarea>'+
+        '<button class="btn pri coach-send" id="coach-send-btn" onclick="coachSend()" title="Send" aria-label="Send"><i class="ti ti-arrow-up"></i></button>'+
+      '</div>'+
+    '</div>';
+  renderCoachSuggest();
+  renderCoachMsgs();
+}
+function coachSetupHtml(){
+  return '<div class="card coach-setup">'+
+    '<div class="card-title"><i class="ti ti-key" style="vertical-align:-2px"></i> Connect Google Gemini <span class="card-sub">free tier — no card needed</span></div>'+
+    '<div class="fg"><label>Your Gemini API key</label><input type="password" class="fi" id="coach-key-input" placeholder="AIza…" autocomplete="off" spellcheck="false"></div>'+
+    '<button class="btn pri full" onclick="saveAiKey()"><i class="ti ti-check"></i>Save key &amp; start</button>'+
+    '<div class="divider"></div>'+
+    '<div class="card-title">Get a free key in ~2 minutes</div>'+
+    guideHtml()+
+    '<div class="f12 muted" style="margin-top:6px;line-height:1.55"><i class="ti ti-lock" style="vertical-align:-1px"></i> Your key is stored only in this browser and is sent only to Google when you ask a question. It is never put in the app code, never synced to the cloud, and never shared.</div>'+
+  '</div>';
+}
+function guideHtml(){
+  const steps=[
+    'Go to <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> and sign in with your Google account.',
+    'Click <strong>“Create API key”</strong>. If asked, let it create a new project (the default is fine).',
+    'Copy the key it shows you (it starts with <span class="mono">AIza…</span>).',
+    'Paste it into the field above and tap <strong>Save key &amp; start</strong>.',
+    'That’s it. The free tier of <span class="mono">gemini-2.0-flash</span> is generous, and this app caps every reply’s length and throttles sending so you stay comfortably inside the free limits.'
+  ];
+  return steps.map((t,i)=>'<div class="guide-step"><div class="guide-num">'+(i+1)+'</div><div>'+t+'</div></div>').join('');
+}
+function saveAiKey(){
+  const k=document.getElementById('coach-key-input').value.trim();
+  if(!k){alert('Paste your Gemini API key first.');return;}
+  if(!/^AIza[0-9A-Za-z\-_]{20,}$/.test(k)&&!confirm('That doesn\u2019t look like a typical Gemini key (they start with "AIza"). Save it anyway?'))return;
+  if(!setAiKeyStored(k))return;
+  S.coach.msgs=[];
+  toast('Coach connected');
+  renderCoach();
+}
+function clearAiKey(){
+  if(!confirm('Remove your saved API key from this browser? The coach will be hidden until you add a key again.'))return;
+  removeAiKeyStored();
+  S.coach.msgs=[];
+  closeModal('modal-coach-settings');
+  renderCoach();
+}
+function openCoachSettings(){
+  const k=getAiKey();
+  document.getElementById('cs-key-mask').textContent=k?maskKey(k):'No key set';
+  document.getElementById('cs-prompt').value=coachPrompt();
+  document.getElementById('cs-model').textContent=COACH.MODEL;
+  document.getElementById('modal-coach-settings').classList.remove('hidden');
+}
+function saveCoachPrompt(){
+  const p=document.getElementById('cs-prompt').value.trim();
+  if(!p){alert('The coach needs a prompt. Reset it if unsure.');return;}
+  save(K.coachprompt,p);
+  toast('Coach style saved');
+  closeModal('modal-coach-settings');
+}
+function resetCoachPrompt(){document.getElementById('cs-prompt').value=DEF_COACH_PROMPT;}
+
+function renderCoachSuggest(){
+  const el=document.getElementById('coach-suggest');if(!el)return;
+  if(S.coach.msgs.length){el.innerHTML='';return;}
+  const qs=['What should I improve this week?','Am I drinking enough water?','How is my sleep trending?','Am I training too hard?','How are my finances this month?','Am I on track for my goals?'];
+  el.innerHTML=qs.map(q=>'<span class="coach-chip" onclick="coachAsk(this.textContent)">'+q+'</span>').join('');
+}
+function coachAutoGrow(t){t.style.height='auto';t.style.height=Math.min(140,t.scrollHeight)+'px';}
+function coachKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();coachSend();}}
+function coachAsk(q){const el=document.getElementById('coach-q');if(el){el.value=q;coachSend();}}
+function renderCoachMsgs(){
+  const el=document.getElementById('coach-msgs');if(!el)return;
+  el.innerHTML=S.coach.msgs.map(m=>{
+    if(m.role==='user')return '<div class="cmsg user">'+esc(m.text)+'</div>';
+    if(m.role==='error')return '<div class="cmsg err"><i class="ti ti-alert-triangle" style="vertical-align:-2px"></i> '+esc(m.text)+'</div>';
+    return '<div class="cmsg coach">'+mdLite(m.text)+'</div>';
+  }).join('')+(S.coach.sending?'<div class="cmsg coach typing" id="coach-typing">Coach is thinking…</div>':'');
+  el.scrollTop=el.scrollHeight;
+}
+/* tiny, safe markdown: escape first, then bold + bullet line breaks */
+function mdLite(s){
+  let h=esc(s);
+  h=h.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  h=h.replace(/^\s*[-*]\s+/gm,'\u2022 ');
+  return h;
+}
+async function coachSend(){
+  const inp=document.getElementById('coach-q');if(!inp)return;
+  let q=inp.value.trim();
+  if(!q||S.coach.sending)return;
+  const now=Date.now();
+  if(now-S.coach.lastSend<COACH.MIN_SEND_INTERVAL_MS){toast('Give it a second…');return;}
+  if(q.length>COACH.MAX_QUESTION_CHARS)q=q.slice(0,COACH.MAX_QUESTION_CHARS);
+  S.coach.lastSend=now;
+  S.coach.msgs.push({role:'user',text:q});
+  inp.value='';coachAutoGrow(inp);
+  S.coach.sending=true;
+  document.getElementById('coach-send-btn').disabled=true;
+  renderCoachSuggest();renderCoachMsgs();
+  try{
+    const reply=await callGemini(q);
+    S.coach.msgs.push({role:'coach',text:reply});
+  }catch(err){
+    S.coach.msgs.push({role:'error',text:err.message||'Something went wrong.'});
+  }finally{
+    S.coach.sending=false;
+    const b=document.getElementById('coach-send-btn');if(b)b.disabled=false;
+    renderCoachMsgs();
+  }
+}
+async function callGemini(question){
+  const key=getAiKey();
+  if(!key)throw new Error('No API key set. Add your Gemini key to use the coach.');
+  const summary=buildCoachSummary();
+  // brief recent history, tightly capped, so token use stays minimal
+  let hist='';
+  const past=S.coach.msgs.filter(m=>m.role==='user'||m.role==='coach').slice(-1-COACH.MAX_HISTORY_MSGS,-1);
+  if(past.length){
+    hist='\n\n=== RECENT CONVERSATION ===\n'+past.map(m=>(m.role==='user'?'Me: ':'Coach: ')+(''+m.text).slice(0,COACH.MAX_HISTORY_CHARS)).join('\n');
+  }
+  const text=coachPrompt()+'\n\n=== MY DATA SNAPSHOT ('+todayStr()+') ===\n'+summary+hist+'\n\n=== MY QUESTION ===\n'+question;
+  const url='https://generativelanguage.googleapis.com/v1beta/models/'+COACH.MODEL+':generateContent?key='+encodeURIComponent(key);
+  let res;
+  try{
+    res=await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[{role:'user',parts:[{text:text}]}],
+        generationConfig:{maxOutputTokens:COACH.MAX_OUTPUT_TOKENS,temperature:0.7}
+      })
+    });
+  }catch(e){
+    throw new Error('Network error — check your internet connection and try again.');
+  }
+  if(!res.ok){
+    let msg='';
+    try{const j=await res.json();msg=(j.error&&j.error.message)||'';}catch(e){}
+    if(res.status===400&&/api key not valid|api_key_invalid|invalid/i.test(msg))throw new Error('Your API key was rejected. Open coach settings and re-paste a valid Gemini key.');
+    if(res.status===400)throw new Error('Request rejected ('+res.status+'). '+(msg||'Try rephrasing your question.'));
+    if(res.status===401||res.status===403)throw new Error('Access denied — the key may be invalid or restricted. Check it in coach settings.');
+    if(res.status===429)throw new Error('Rate limit reached on the free tier. Wait a minute and try again.');
+    if(res.status>=500)throw new Error('Google\u2019s service is having a moment ('+res.status+'). Try again shortly.');
+    throw new Error('Request failed ('+res.status+'). '+(msg||''));
+  }
+  let data;
+  try{data=await res.json();}catch(e){throw new Error('Got a malformed response. Try again.');}
+  const cand=data&&data.candidates&&data.candidates[0];
+  if(!cand){
+    const block=data&&data.promptFeedback&&data.promptFeedback.blockReason;
+    if(block)throw new Error('The request was blocked ('+block+'). Try rephrasing.');
+    throw new Error('Empty response from the model. Try rephrasing your question.');
+  }
+  if(cand.finishReason==='SAFETY')throw new Error('The reply was filtered for safety. Try rephrasing.');
+  const reply=cand.content&&cand.content.parts&&cand.content.parts.map(p=>p.text||'').join('').trim();
+  if(!reply){
+    if(cand.finishReason==='MAX_TOKENS')throw new Error('Reply hit the length cap before any text came through. Ask something more specific.');
+    throw new Error('The coach returned an empty answer. Try rephrasing.');
+  }
+  return reply;
+}
+
+/* ---- compact data summary (aggregates only — never raw rows) ---- */
+function coachWin(field,n){
+  const rows=getTracking(n).filter(r=>r[field]!=null&&r[field]!=='').map(r=>parseFloat(r[field])).filter(v=>!isNaN(v));
+  return rows;
+}
+function coachAvgLine(label,field,unit){
+  const a7=coachWin(field,7),a14=coachWin(field,14),a30=coachWin(field,30);
+  if(!a30.length)return label+': no data logged';
+  const f=v=>v.length?rd(avg(v),1)+(unit||''):'—';
+  // trend: last 7d avg vs the 7d before that
+  const all=getTracking(30).filter(r=>r[field]!=null&&r[field]!=='').map(r=>({d:r.date,v:parseFloat(r[field])})).filter(x=>!isNaN(x.v));
+  let trend='';
+  if(all.length>=6){const recent=all.slice(-7).map(x=>x.v),prior=all.slice(-14,-7).map(x=>x.v);if(prior.length){const dv=rd(avg(recent)-avg(prior),1);trend=' ('+(dv>0?'+':'')+dv+unit+' vs prior week)';}}
+  return label+': 7d '+f(a7)+', 14d '+f(a14)+', 30d '+f(a30)+trend;
+}
+function buildCoachSummary(){
+  const L=[];
+  // wellbeing averages & trends
+  L.push(coachAvgLine('Sleep (hrs)','sleep','h'));
+  L.push(coachAvgLine('Water (L)','water','L'));
+  L.push(coachAvgLine('Deep work (hrs)','deepwork','h'));
+  L.push(coachAvgLine('Weight (kg)','weight','kg'));
+  L.push(coachAvgLine('Mood /10','mood',''));
+  L.push(coachAvgLine('Energy /10','energy',''));
+  L.push(coachAvgLine('Screen (hrs)','screen','h'));
+  // streaks
+  L.push('Streaks: log '+calcLogStreak()+'d, running '+calcRunStreak()+'d, workouts '+calcWorkoutStreak()+'d, meds '+calcHabitStreak('meds')+'d, stretching '+calcHabitStreak('stretch')+'d');
+  // recent workouts
+  const ws=[...S.workouts].slice(-5).reverse();
+  if(ws.length){L.push('Recent workouts: '+ws.map(w=>fmtDate(w.date)+' '+(w.name||'Workout')+' ('+w.exercises.length+' ex'+(w.intensity?', int '+w.intensity+'/10':'')+(w.duration?', '+w.duration+'min':'')+')').join('; '));}
+  else L.push('Recent workouts: none logged');
+  // recent runs
+  const rs=[...S.runs].sort((a,b)=>a.date.localeCompare(b.date)).slice(-5).reverse();
+  if(rs.length){
+    const now=new Date(),w0=new Date(now);w0.setDate(now.getDate()-7);
+    const wkKm=rd(S.runs.filter(r=>new Date(r.date+'T12:00:00')>=w0).reduce((s,r)=>s+(parseFloat(r.distance)||0),0),1);
+    L.push('Running: '+wkKm+'km last 7d. Recent: '+rs.map(r=>fmtDate(r.date)+' '+(parseFloat(r.distance)||0)+'km '+(r.type||'')+(r.pace?' @'+r.pace+'/km':'')+(r.hr?' '+r.hr+'bpm':'')).join('; '));
+  }else L.push('Running: none logged');
+  // finance this month
+  if(S.finance&&S.finance.length){
+    const m=curMonth();const mTx=txInMonth(m);
+    const inc=sumAmt(txIncome(mTx)),exp=sumAmt(txExpenses(mTx)),net=inc-exp;
+    const sr=inc>0?Math.round(net/inc*100):null;
+    const byCat={};txExpenses(mTx).forEach(t=>{byCat[t.category]=(byCat[t.category]||0)+(parseFloat(t.amount)||0);});
+    const top=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,3).map(e=>catInfo('expense',e[0]).l+' '+fmtKr0(e[1])).join(', ');
+    const overs=[];Object.keys(S.budgets||{}).forEach(k=>{const b=S.budgets[k];if(b>0&&(byCat[k]||0)>b)overs.push(catInfo('expense',k).l);});
+    L.push('Finance '+monthName(m)+': income '+fmtKr0(inc)+', spent '+fmtKr0(exp)+', net '+fmtKr0(net)+(sr!=null?' ('+sr+'% saved)':'')+'. Top: '+(top||'none')+'. '+(overs.length?'Over budget: '+overs.join(', '):'No categories over budget'));
+  }else L.push('Finance: no transactions logged');
+  // goals
+  if(S.goals&&S.goals.length){
+    L.push('Goals:');
+    S.goals.forEach(g=>{
+      const bits=[(GOAL_STATUS[g.status]||g.status),(parseInt(g.progress)||0)+'%'];
+      if(g.target)bits.push('target '+g.target);
+      let line='  • '+g.title+' — '+bits.join(', ');
+      if(g.routine)line+='. Routine: '+(''+g.routine).slice(0,160);
+      if(g.info)line+='. Info: '+(''+g.info).slice(0,160);
+      L.push(line);
+    });
+  }else L.push('Goals: none set');
+  return L.join('\n');
+}
+
 /* ============ DATA MANAGEMENT ============ */
 function openData(){renderSyncUI();document.getElementById('modal-data').classList.remove('hidden');}
-function exportJSON(){const data={app:'locked-in',version:4,exported:new Date().toISOString(),tracking:S.tracking,runs:S.runs,workouts:S.workouts,routine:S.routine,exercises:S.exercises,sdone:S.sdone,rdone:S.rdone,finance:S.finance,budgets:S.budgets};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='locked-in-backup-'+todayStr()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+function exportJSON(){const data={app:'locked-in',version:5,exported:new Date().toISOString(),tracking:S.tracking,runs:S.runs,workouts:S.workouts,routine:S.routine,exercises:S.exercises,sdone:S.sdone,rdone:S.rdone,finance:S.finance,budgets:S.budgets,goals:S.goals,expCats:S.expCats,incCats:S.incCats,blockTypes:S.blockTypes,coachPrompt:load(K.coachprompt,null)};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='locked-in-backup-'+todayStr()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 function exportCSV(type){
   let csv='',rows;
   if(type==='tracking'){if(!S.tracking.length){alert('No tracking data to export.');return;}const keys=['date','sleep','sleepq','bedtime','waketime','sleepalarm','water','electrolytes','deepwork','screen','prodrating','reading','mood','energy','soreness','weight','meds','supps','stretch','skincare','workout','wduration','intensity','cardio','cardiomins','cardiokm','notes'];rows=getTracking(100000);csv=keys.join(',')+'\n'+rows.map(r=>keys.map(k=>JSON.stringify(r[k]!=null?r[k]:'')).join(',')).join('\n');}
@@ -2380,7 +3026,7 @@ function exportCSV(type){
   else{if(!S.runs.length){alert('No running data to export.');return;}const keys=['date','type','distance','duration','pace','hr','maxhr','calories','elevation','effort','notes'];rows=[...S.runs].sort((a,b)=>a.date.localeCompare(b.date));csv=keys.join(',')+'\n'+rows.map(r=>keys.map(k=>JSON.stringify(r[k]!=null?r[k]:'')).join(',')).join('\n');}
   const blob=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='locked-in-'+type+'-'+todayStr()+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
-function importJSON(){const file=document.getElementById('import-file').files[0];if(!file){alert('Choose a JSON backup file first.');return;}const reader=new FileReader();reader.onload=e=>{try{const data=JSON.parse(e.target.result);let tc=0,rc=0,wc=0,fc=0;if(Array.isArray(data.tracking)){const add=data.tracking.filter(n=>n.date&&!S.tracking.find(x=>x.date===n.date));S.tracking=[...S.tracking,...add];tc=add.length;}if(Array.isArray(data.runs)){const add=data.runs.filter(n=>!S.runs.find(x=>x.id===n.id));S.runs=[...S.runs,...add];rc=add.length;}if(Array.isArray(data.workouts)){const add=data.workouts.filter(n=>!S.workouts.find(x=>x.id===n.id));S.workouts=[...S.workouts,...add];wc=add.length;}if(Array.isArray(data.finance)){const add=data.finance.filter(n=>!S.finance.find(x=>x.id===n.id));S.finance=[...S.finance,...add];fc=add.length;}if(data.budgets&&typeof data.budgets==='object')S.budgets={...data.budgets,...S.budgets};if(data.sdone&&typeof data.sdone==='object')S.sdone={...data.sdone,...S.sdone};if(data.rdone&&typeof data.rdone==='object')S.rdone={...data.rdone,...S.rdone};save(K.tracking,S.tracking);save(K.runs,S.runs);save(K.workouts,S.workouts);save(K.sdone,S.sdone);save(K.rdone,S.rdone);save(K.finance,S.finance);save(K.budgets,S.budgets);alert('Imported '+tc+' tracking entries, '+rc+' runs, '+wc+' workouts, '+fc+' transactions.');closeModal('modal-data');nav('dash');}catch(err){alert('Invalid backup file. '+err.message);}};reader.readAsText(file);}
+function importJSON(){const file=document.getElementById('import-file').files[0];if(!file){alert('Choose a JSON backup file first.');return;}const reader=new FileReader();reader.onload=e=>{try{const data=JSON.parse(e.target.result);let tc=0,rc=0,wc=0,fc=0;if(Array.isArray(data.tracking)){const add=data.tracking.filter(n=>n.date&&!S.tracking.find(x=>x.date===n.date));S.tracking=[...S.tracking,...add];tc=add.length;}if(Array.isArray(data.runs)){const add=data.runs.filter(n=>!S.runs.find(x=>x.id===n.id));S.runs=[...S.runs,...add];rc=add.length;}if(Array.isArray(data.workouts)){const add=data.workouts.filter(n=>!S.workouts.find(x=>x.id===n.id));S.workouts=[...S.workouts,...add];wc=add.length;}if(Array.isArray(data.finance)){const add=data.finance.filter(n=>!S.finance.find(x=>x.id===n.id));S.finance=[...S.finance,...add];fc=add.length;}if(data.budgets&&typeof data.budgets==='object')S.budgets={...data.budgets,...S.budgets};if(data.sdone&&typeof data.sdone==='object')S.sdone={...data.sdone,...S.sdone};if(data.rdone&&typeof data.rdone==='object')S.rdone={...data.rdone,...S.rdone};let gc=0;if(Array.isArray(data.goals)){const add=data.goals.filter(n=>n.id&&!S.goals.find(x=>x.id===n.id));S.goals=[...S.goals,...add];gc=add.length;}if(Array.isArray(data.expCats)&&data.expCats.length){S.expCats=data.expCats;save(K.expcats,S.expCats);}if(Array.isArray(data.incCats)&&data.incCats.length){S.incCats=data.incCats;save(K.inccats,S.incCats);}if(Array.isArray(data.blockTypes)&&data.blockTypes.length){S.blockTypes=data.blockTypes;save(K.blocktypes,S.blockTypes);}if(typeof data.coachPrompt==='string'&&data.coachPrompt)save(K.coachprompt,data.coachPrompt);save(K.tracking,S.tracking);save(K.runs,S.runs);save(K.workouts,S.workouts);save(K.sdone,S.sdone);save(K.rdone,S.rdone);save(K.finance,S.finance);save(K.budgets,S.budgets);save(K.goals,S.goals);alert('Imported '+tc+' tracking entries, '+rc+' runs, '+wc+' workouts, '+fc+' transactions, '+gc+' goals.');closeModal('modal-data');nav('dash');}catch(err){alert('Invalid backup file. '+err.message);}};reader.readAsText(file);}
 function clearData(type){if(!confirm('Clear all '+type+' data? This cannot be undone.'))return;if(type==='tracking'||type==='all'){S.tracking=[];save(K.tracking,S.tracking);}if(type==='running'||type==='all'){S.runs=[];save(K.runs,S.runs);}if(type==='finance'||type==='all'){S.finance=[];S.budgets={};save(K.finance,S.finance);save(K.budgets,S.budgets);}if(type==='all'){S.workouts=[];save(K.workouts,S.workouts);}closeModal('modal-data');alert('Cleared.');nav('dash');}
 
 /* ============ CLOUD SYNC (GitHub) ============ */
@@ -2392,7 +3038,7 @@ function ghHeaders(){return {Authorization:'Bearer '+SYNC.cfg.token,Accept:'appl
 function ghUrl(){const p=SYNC.cfg.path||'data.json';return 'https://api.github.com/repos/'+SYNC.cfg.owner+'/'+SYNC.cfg.repo+'/contents/'+p;}
 function b64encode(str){return btoa(unescape(encodeURIComponent(str)));}
 function b64decode(b){return decodeURIComponent(escape(atob((b||'').replace(/\s/g,''))));}
-function gatherData(){return {app:'locked-in',version:4,savedAt:Date.now(),tracking:S.tracking,runs:S.runs,workouts:S.workouts,routine:S.routine,exercises:S.exercises,sdone:S.sdone,rdone:S.rdone,finance:S.finance,budgets:S.budgets};}
+function gatherData(){return {app:'locked-in',version:5,savedAt:Date.now(),tracking:S.tracking,runs:S.runs,workouts:S.workouts,routine:S.routine,exercises:S.exercises,sdone:S.sdone,rdone:S.rdone,finance:S.finance,budgets:S.budgets,goals:S.goals,expCats:S.expCats,incCats:S.incCats,blockTypes:S.blockTypes,coachPrompt:load(K.coachprompt,null)};}
 function applyData(d){
   SYNC.applying=true;
   try{
@@ -2405,6 +3051,11 @@ function applyData(d){
     if(d.rdone&&typeof d.rdone==='object'){S.rdone=d.rdone;save(K.rdone,S.rdone);}
     if(Array.isArray(d.finance)){S.finance=d.finance;save(K.finance,S.finance);}
     if(d.budgets&&typeof d.budgets==='object'){S.budgets=d.budgets;save(K.budgets,S.budgets);}
+    if(Array.isArray(d.goals)){S.goals=d.goals;save(K.goals,S.goals);}
+    if(Array.isArray(d.expCats)&&d.expCats.length){S.expCats=d.expCats;save(K.expcats,S.expCats);}
+    if(Array.isArray(d.incCats)&&d.incCats.length){S.incCats=d.incCats;save(K.inccats,S.incCats);}
+    if(Array.isArray(d.blockTypes)&&d.blockTypes.length){S.blockTypes=d.blockTypes;save(K.blocktypes,S.blockTypes);}
+    if(typeof d.coachPrompt==='string'&&d.coachPrompt)save(K.coachprompt,d.coachPrompt);
     localStorage.setItem('li_savedAt',String(d.savedAt||Date.now()));
   }finally{SYNC.applying=false;}
 }
@@ -2500,10 +3151,23 @@ document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.overlay:not(.hidden)').forEach(o=>o.classList.add('hidden'));});
 
 /* ============ INIT ============ */
+/* Keep daily-completion maps from growing forever: drop entries older than ~120 days. */
+function pruneDailyMaps(){
+  const cut=new Date();cut.setDate(cut.getDate()-120);const cutStr=cut.toISOString().split('T')[0];
+  let changed=false;
+  [['rdone',K.rdone],['sdone',K.sdone]].forEach(([k,key])=>{
+    const m=S[k];if(!m||typeof m!=='object')return;
+    Object.keys(m).forEach(d=>{if(d<cutStr){delete m[d];changed=true;}});
+    if(changed)save(key,m);
+  });
+}
 setTheme(load(K.theme,'light'));
 migrateOldLogs();
+pruneDailyMaps();
 if(S.aw)S.wStart=Date.now();
 S.rday=todayDay();
+_curDay=todayStr();
+renderCoachFab();
 renderDash();
 renderExList();
 if(syncConfigured())syncPull();
