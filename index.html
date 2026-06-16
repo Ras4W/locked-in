@@ -1268,8 +1268,9 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
   </div>
   <div class="f12 muted" style="margin-bottom:14px;line-height:1.5"><i class="ti ti-lock" style="vertical-align:-1px"></i> Stored only in this browser. Sent only to Google when you ask a question. Never synced or shared.</div>
   <div class="divider"></div>
-  <div class="card-title">Model <span class="card-sub">set in code — current: <span class="mono" id="cs-model">gemini-2.0-flash</span></span></div>
-  <p class="f12 muted" style="margin-bottom:14px;line-height:1.5">To switch models, change the <span class="mono">COACH.MODEL</span> value near the top of the AI Coach code (e.g. to <span class="mono">gemini-2.5-pro</span>).</p>
+  <div class="card-title">Model</div>
+  <select class="fsel" id="cs-model" onchange="changeCoachModel(this.value)"></select>
+  <p class="f12 muted" style="margin-top:8px;line-height:1.5">Google removed older Gemini 2.0 models and Pro models from most free-tier accounts in late 2025. If you keep getting <span class="mono">429</span>, pick a 2.5 Flash model — <span class="mono">gemini-2.5-flash-lite</span> has the largest free daily quota right now.</p>
   <div class="divider"></div>
   <div class="card-title">Coach style / persona</div>
   <p class="f12 muted" style="margin-bottom:8px;line-height:1.5">This is the system prompt sent with every question. Make it yours.</p>
@@ -1455,7 +1456,7 @@ const DEF_BLOCK_TYPES=[
 /* ─────────────────────────────────────────
    STORAGE
 ───────────────────────────────────────── */
-const K={routine:'li_r5',workouts:'li_w5',exercises:'li_e5',sdone:'li_sd5',aw:'li_aw5',tracking:'li_tracking',runs:'li_runs',theme:'li_theme',oldlogs:'li_l5',finance:'li_finance',budgets:'li_budgets',rdone:'li_rdone',aikey:'li_aikey',coachprompt:'li_coachprompt',expcats:'li_expcats',inccats:'li_inccats',blocktypes:'li_blocktypes',goals:'li_goals'};
+const K={routine:'li_r5',workouts:'li_w5',exercises:'li_e5',sdone:'li_sd5',aw:'li_aw5',tracking:'li_tracking',runs:'li_runs',theme:'li_theme',oldlogs:'li_l5',finance:'li_finance',budgets:'li_budgets',rdone:'li_rdone',aikey:'li_aikey',aimodel:'li_aimodel',coachprompt:'li_coachprompt',expcats:'li_expcats',inccats:'li_inccats',blocktypes:'li_blocktypes',goals:'li_goals'};
 const load=(k,fb)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch{return fb}};
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){console.error(e)}if(typeof syncOnLocalChange==='function')syncOnLocalChange(k);};
 
@@ -2751,13 +2752,26 @@ function deleteGoal(){
    in this browser (localStorage K.aikey) and is sent ONLY to Google's endpoint.
    It is never written into the app code, never synced to GitHub, never logged. */
 const COACH={
-  MODEL:'gemini-2.0-flash',     // ← change this one line to switch model (e.g. 'gemini-2.5-pro')
+  /* Default model — gemini-2.5-flash-lite has the most generous free-tier quotas
+     (≈15 RPM, ≈1000 RPD) as of 2026. The older 'gemini-2.0-flash' was effectively
+     pushed off the free tier for new keys, which is why some accounts get a 429
+     on the very first request. You can change the active model below or in the
+     in-app Coach settings (Settings → Model). */
+  MODEL:'gemini-2.5-flash-lite',
+  KNOWN_MODELS:[
+    {id:'gemini-2.5-flash-lite',label:'Gemini 2.5 Flash-Lite — fastest, most generous free tier (recommended)'},
+    {id:'gemini-2.5-flash',     label:'Gemini 2.5 Flash — smarter, smaller free quota'},
+    {id:'gemini-2.0-flash',     label:'Gemini 2.0 Flash — legacy, free tier mostly removed (may 429)'},
+    {id:'gemini-2.5-pro',       label:'Gemini 2.5 Pro — strongest reasoning (paid tier only)'},
+  ],
   MAX_OUTPUT_TOKENS:800,        // hard cap on reply length → keeps every call tiny & free
   MIN_SEND_INTERVAL_MS:2500,    // throttle so the free-tier rate limit can't be tripped
   MAX_QUESTION_CHARS:1500,      // cap the question length sent
   MAX_HISTORY_MSGS:6,           // only the last few turns travel with each request
   MAX_HISTORY_CHARS:600         // and each of those is trimmed
 };
+function activeModel(){return load(K.aimodel,COACH.MODEL);}
+function setActiveModel(m){save(K.aimodel,m);}
 const DEF_COACH_PROMPT=`You are my elite personal performance coach. You can see a compact snapshot of my real tracked data below (sleep, hydration, deep work, weight, mood/energy, training, running, finances and goals).
 
 Rules:
@@ -2816,7 +2830,7 @@ function guideHtml(){
     'Click <strong>“Create API key”</strong>. If asked, let it create a new project (the default is fine).',
     'Copy the key it shows you (it starts with <span class="mono">AIza…</span>).',
     'Paste it into the field above and tap <strong>Save key &amp; start</strong>.',
-    'That’s it. The free tier of <span class="mono">gemini-2.0-flash</span> is generous, and this app caps every reply’s length and throttles sending so you stay comfortably inside the free limits.'
+    'That’s it. The coach defaults to <span class="mono">gemini-2.5-flash-lite</span> — the model with the largest free-tier quota in 2026 (≈1000 requests/day). You can pick a different model later in Coach settings. Every reply is capped and sending is throttled, so you stay comfortably inside the free limits.'
   ];
   return steps.map((t,i)=>'<div class="guide-step"><div class="guide-num">'+(i+1)+'</div><div>'+t+'</div></div>').join('');
 }
@@ -2840,9 +2854,14 @@ function openCoachSettings(){
   const k=getAiKey();
   document.getElementById('cs-key-mask').textContent=k?maskKey(k):'No key set';
   document.getElementById('cs-prompt').value=coachPrompt();
-  document.getElementById('cs-model').textContent=COACH.MODEL;
+  const sel=document.getElementById('cs-model');
+  const cur=activeModel();
+  const known=COACH.KNOWN_MODELS.slice();
+  if(!known.find(m=>m.id===cur))known.unshift({id:cur,label:cur+' (custom)'});
+  sel.innerHTML=known.map(m=>'<option value="'+m.id+'"'+(m.id===cur?' selected':'')+'>'+m.label+'</option>').join('');
   document.getElementById('modal-coach-settings').classList.remove('hidden');
 }
+function changeCoachModel(m){setActiveModel(m);toast('Model: '+m);}
 function saveCoachPrompt(){
   const p=document.getElementById('cs-prompt').value.trim();
   if(!p){alert('The coach needs a prompt. Reset it if unsure.');return;}
@@ -2912,7 +2931,7 @@ async function callGemini(question){
     hist='\n\n=== RECENT CONVERSATION ===\n'+past.map(m=>(m.role==='user'?'Me: ':'Coach: ')+(''+m.text).slice(0,COACH.MAX_HISTORY_CHARS)).join('\n');
   }
   const text=coachPrompt()+'\n\n=== MY DATA SNAPSHOT ('+todayStr()+') ===\n'+summary+hist+'\n\n=== MY QUESTION ===\n'+question;
-  const url='https://generativelanguage.googleapis.com/v1beta/models/'+COACH.MODEL+':generateContent?key='+encodeURIComponent(key);
+  const url='https://generativelanguage.googleapis.com/v1beta/models/'+activeModel()+':generateContent?key='+encodeURIComponent(key);
   let res;
   try{
     res=await fetch(url,{
@@ -2932,7 +2951,11 @@ async function callGemini(question){
     if(res.status===400&&/api key not valid|api_key_invalid|invalid/i.test(msg))throw new Error('Your API key was rejected. Open coach settings and re-paste a valid Gemini key.');
     if(res.status===400)throw new Error('Request rejected ('+res.status+'). '+(msg||'Try rephrasing your question.'));
     if(res.status===401||res.status===403)throw new Error('Access denied — the key may be invalid or restricted. Check it in coach settings.');
-    if(res.status===429)throw new Error('Rate limit reached on the free tier. Wait a minute and try again.');
+    if(res.status===429){
+      const isQuota=/quota|RESOURCE_EXHAUSTED|exhausted/i.test(msg);
+      if(isQuota)throw new Error('Daily free-tier quota for '+activeModel()+' is exhausted (or unavailable for your key). Open coach settings and switch the model — "gemini-2.5-flash-lite" has the largest free quota right now.');
+      throw new Error('Rate-limited (15 requests/min on free tier). Wait ~30 seconds and try again.');
+    }
     if(res.status>=500)throw new Error('Google\u2019s service is having a moment ('+res.status+'). Try again shortly.');
     throw new Error('Request failed ('+res.status+'). '+(msg||''));
   }
