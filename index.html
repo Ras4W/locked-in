@@ -518,21 +518,22 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
 .exm-sel{padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r3);font-size:12px;background:var(--surface2);color:var(--text);cursor:pointer;max-width:130px}
 .exm-sel:focus{outline:none;border-color:var(--accent);box-shadow:var(--ring)}
 
-/* ── Training split (week view) ── */
-.split-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:11px}
-.splitday{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:12px;display:flex;flex-direction:column;box-shadow:var(--shadow-sm)}
+/* ── Training split (week view / calendar) ── */
+.split-board{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;align-items:stretch}
+.splitday{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);display:flex;flex-direction:column;box-shadow:var(--shadow-sm);min-height:380px;overflow:hidden}
 .splitday.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),var(--shadow-sm)}
-.splitday-h{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:10px}
-.splitday.today .splitday-h{color:var(--accent-text)}
-.splitday-today{font-size:9.5px;font-weight:700;background:var(--accent);color:#fff;padding:2px 7px;border-radius:99px;letter-spacing:.03em}
-.splitday-acts{display:flex;flex-direction:column;gap:8px;flex:1}
-.splitact{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--r3);padding:9px 10px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .1s}
-.splitact:hover{box-shadow:var(--shadow-sm);transform:translateX(1px)}
-.splitact-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
-.splitact-title{font-size:13px;font-weight:600;line-height:1.3}
-.splitact-desc{font-size:11.5px;color:var(--text2);line-height:1.5;margin-top:4px}
-.splitact-start{margin-top:8px}
-.splitadd{border:1px dashed var(--border3);background:none;color:var(--text3);border-radius:var(--r3);padding:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px}
+.splitday-h{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:var(--text2);padding:9px 4px 8px;border-bottom:1px solid var(--border);text-align:center;background:var(--surface2)}
+.splitday.today .splitday-h{color:#fff;background:var(--accent);border-bottom-color:var(--accent)}
+.splitday-today{font-size:8px;font-weight:700;background:rgba(255,255,255,.25);color:#fff;padding:1px 6px;border-radius:99px;letter-spacing:.04em}
+.splitday-acts{display:flex;flex-direction:column;gap:6px;flex:1;padding:7px 6px}
+.splitact{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--r3);padding:7px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .1s}
+.splitact:hover{box-shadow:var(--shadow-sm);transform:translateY(-1px)}
+.splitact-top{display:flex;align-items:flex-start;justify-content:space-between;gap:4px}
+.splitact-title{font-size:11.5px;font-weight:600;line-height:1.25;word-break:break-word}
+.splitact-desc{font-size:10px;color:var(--text2);line-height:1.4;margin-top:3px}
+.splitact-start{margin-top:7px}
+.splitact-start.btn.sm{padding:5px 5px;font-size:10.5px;width:100%}
+.splitadd{border:1px dashed var(--border3);background:none;color:var(--text3);border-radius:var(--r3);padding:6px 4px;font-size:10.5px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:3px}
 .splitadd:hover{border-color:var(--accent);color:var(--accent-text);background:var(--accent-bg)}
 
 /* ── Mobile nav ── */
@@ -598,9 +599,6 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
 
   <div class="section-eyebrow">Quick stats</div>
   <div class="sgrid" id="dash-stats"></div>
-
-  <div class="section-eyebrow">Insights</div>
-  <div id="dash-insights"></div>
 
   <div class="btwn" style="align-items:flex-end;margin-top:1.6rem;margin-bottom:2px">
     <div class="section-eyebrow" style="margin-bottom:0">Trends</div>
@@ -991,13 +989,8 @@ main{flex:1;overflow-y:auto;background:var(--bg);background-image:radial-gradien
       <div id="rcontent"></div>
     </div>
 
-    <!-- SPLIT TAB (week view) -->
+<!-- SPLIT TAB (week view) -->
     <div id="train-split" class="hidden">
-      <div class="card" style="margin-bottom:14px">
-        <div class="btwn">
-          <div><span class="fw6 f14">Weekly training split</span><div class="f12 muted" style="margin-top:2px">Your whole week at a glance — tap any activity to edit, or add your own.</div></div>
-        </div>
-      </div>
       <div class="split-board" id="split-board"></div>
     </div>
 
@@ -1942,13 +1935,12 @@ function renderDash(){
     {l:'Workouts ('+lbl+')',v:woCount,s:S.workouts.length+' total'},
     {l:'Weight (latest)',v:last.weight?last.weight+'kg':'\u2014',s:weightTrend()},
   ].map(x=>'<div class="stat"><div class="stat-lbl">'+x.l+'</div><div class="stat-val">'+x.v+'</div><div class="stat-sub">'+x.s+'</div></div>').join('');
-  const ins=generateInsights();
-  document.getElementById('dash-insights').innerHTML=ins.slice(0,3).map(i=>'<div class="insight-card '+(i.type||'')+'"><div class="insight-icon">'+i.icon+'</div><div class="insight-text">'+i.text+'</div></div>').join('');
+  
   renderDashChartRange();
   renderDashCharts();
   const nw=new Date(),nm=nw.getHours()*60+nw.getMinutes();
   const upcoming=(S.routine[S.rday]||[]).slice().sort((a,b)=>(a.time||'').localeCompare(b.time||'')).filter(b=>{const t=(b.time||'00:00').split(':').map(Number);return t[0]*60+t[1]>=nm;}).slice(0,4);
-  document.getElementById('dash-sched').innerHTML=upcoming.length?upcoming.map(b=>{const ti=blockTypeInfo(b.type);return '<div class="rblock t-'+b.type+'" style="margin-bottom:4px"><div class="rbar" style="background:'+ti.color+'"></div><div class="rtime">'+b.time+'</div><div class="rinfo"><div class="rtitle">'+(ti.emoji?ti.emoji+' ':'')+b.title+'</div></div></div>';}).join(''):'<div class="empty" style="padding:1rem"><p>No more blocks today. Great work.</p></div>';
+  document.getElementById('dash-sched').innerHTML=upcoming.length?upcoming.map(b=>{const ti=blockTypeInfo(b.type);return '<div class="rblock t-'+b.type+'" style="margin-bottom:4px"><div class="rbar" style="background:'+ti.color+'"></div><div class="rtime">'+b.time+'</div><div class="rinfo"><div class="rtitle">'+b.title+'</div></div></div>';}).join(''):'<div class="empty" style="padding:1rem"><p>No more blocks today. Great work.</p></div>';
   const lw=S.workouts[S.workouts.length-1];
   document.getElementById('dash-workout').innerHTML=lw?'<div class="btwn"><div><div class="fw5">'+(lw.name||'Workout')+'</div><div class="f12 muted" style="margin-top:2px">'+fmtDate(lw.date)+' \u00B7 '+lw.exercises.length+' exercises</div></div><button class="btn sm" onclick="viewWDetail(\''+lw.id+'\')">Details</button></div>':'<div class="muted f13">No workouts yet. Hit \u201CLog workout\u201D to start.</div>';
   const lr=[...S.runs].sort((a,b)=>a.date.localeCompare(b.date))[S.runs.length-1];
@@ -2759,7 +2751,7 @@ function renderRoutine(){
     const isDone=done.includes(b.id);
     const ti=blockTypeInfo(b.type);
     const check=isToday?'<button class="rcheck'+(isDone?' on':'')+'" onclick="toggleRDone(event,'+b.id+')" title="Mark done" aria-label="Mark done"><i class="ti ti-'+(isDone?'check':'circle')+'"></i></button>':'<div class="rbar" style="background:'+ti.color+'"></div>';
-    return '<div class="rblock t-'+b.type+(isDone?' rdone':'')+'" draggable="true" data-id="'+b.id+'"><i class="ti ti-grip-vertical dhandle"></i>'+check+'<div class="rtime">'+(b.time||'')+'</div><div class="rinfo"><div class="rtitle">'+(ti.emoji?ti.emoji+' ':'')+b.title+'</div>'+(b.desc?'<div class="rdesc">'+b.desc+'</div>':'')+'</div><div class="ract"><button class="btn ico" onclick="openCopyBlock('+b.id+')" title="Copy to other days"><i class="ti ti-copy"></i></button><button class="btn ico" onclick="openBlockModal('+b.id+')" title="Edit"><i class="ti ti-pencil"></i></button><button class="btn ico" onclick="delBlock('+b.id+')" title="Delete"><i class="ti ti-trash"></i></button></div></div>';
+    return '<div class="rblock t-'+b.type+(isDone?' rdone':'')+'" draggable="true" data-id="'+b.id+'"><i class="ti ti-grip-vertical dhandle"></i>'+check+'<div class="rtime">'+(b.time||'')+'</div><div class="rinfo"><div class="rtitle">'+b.title+'</div>'+(b.desc?'<div class="rdesc">'+b.desc+'</div>':'')+'</div><div class="ract"><button class="btn ico" onclick="openCopyBlock('+b.id+')" title="Copy to other days"><i class="ti ti-copy"></i></button><button class="btn ico" onclick="openBlockModal('+b.id+')" title="Edit"><i class="ti ti-pencil"></i></button><button class="btn ico" onclick="delBlock('+b.id+')" title="Delete"><i class="ti ti-trash"></i></button></div></div>';
   }).join('')+'</div>';
   el.querySelectorAll('.rblock').forEach(r=>{
     r.addEventListener('dragstart',e=>{dragSrc=r;r.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
@@ -3056,7 +3048,7 @@ function renderSplit(){
     const cards=acts.map(a=>{
       const ti=blockTypeInfo(a.type);
       const tpl=a.template?S.templates.find(t=>t.id===a.template):null;
-      return '<div class="splitact" style="border-left-color:'+ti.color+'" onclick="openSplitAct(\''+d+'\','+a.id+')"><div class="splitact-top"><span class="splitact-title">'+(ti.emoji?ti.emoji+' ':'')+esc(a.title)+'</span></div>'+(a.desc?'<div class="splitact-desc">'+esc(a.desc)+'</div>':'')+(tpl?'<button class="btn grn full sm splitact-start" onclick="event.stopPropagation();startTemplate(\''+tpl.id+'\')"><i class="ti ti-player-play"></i>Start '+esc(tpl.name)+'</button>':'')+'</div>';
+      return '<div class="splitact" style="border-left-color:'+ti.color+'" onclick="openSplitAct(\''+d+'\','+a.id+')"><div class="splitact-top"><span class="splitact-title">'+esc(a.title)+'</span></div>'+(a.desc?'<div class="splitact-desc">'+esc(a.desc)+'</div>':'')+(tpl?'<button class="btn grn full sm splitact-start" onclick="event.stopPropagation();startTemplate(\''+tpl.id+'\')">Start</button>':'')+'</div>';
     }).join('');
     return '<div class="splitday'+(isToday?' today':'')+'"><div class="splitday-h"><span>'+DSHORT[i]+'</span>'+(isToday?'<span class="splitday-today">TODAY</span>':'')+'</div><div class="splitday-acts">'+cards+'<button class="splitadd" onclick="openSplitAct(\''+d+'\')"><i class="ti ti-plus"></i>Add activity</button></div></div>';
   }).join('');
